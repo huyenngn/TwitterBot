@@ -23,7 +23,6 @@ translator = Translator()
 
 rules = [
     tweepy.StreamRule('from:srchafreen -is:retweet', tag='freen'),
-    tweepy.StreamRule('from:joohwangblink -is:retweet', tag='sofia'),
     tweepy.StreamRule('from:AngelssBecky -is:retweet', tag='becky')
 ]
 
