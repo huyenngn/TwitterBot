@@ -38,7 +38,7 @@ class TranslationAnswer(tweepy.StreamingClient):
     def on_tweet(self, tweet):
         result = "[EN] "
         result += translator.translate(tweet.text, src='th', dst='en').text
-        print(tweet.id, tweet.text, result.text, tweet.author_id)
+        print(tweet.id, tweet.text, result, tweet.author_id)
         client.create_tweet(text=result, in_reply_to_tweet_id=tweet.id)
         client.like(tweet.id)
         client.retweet(tweet.id)
