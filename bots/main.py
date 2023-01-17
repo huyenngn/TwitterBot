@@ -24,7 +24,7 @@ translator = Translator()
 sclient = tweepy.StreamingClient(bearer_token)
 rules = [
     tweepy.StreamRule('from:srchafreen -is:retweet', tag='freen'),
-    # tweepy.StreamRule('from:joohwangblink -is:retweet', tag='sofia'),
+    tweepy.StreamRule('from:joohwangblink -is:retweet', tag='sofia'),
     tweepy.StreamRule('from:AngelssBecky -is:retweet', tag='becky')
 ]
 sclient.add_rules(rules)
@@ -50,5 +50,5 @@ class TranslationAnswer(tweepy.StreamingClient):
         self.disconnect()
 
 
-ta = TranslationAnswer(sclient)
+ta = TranslationAnswer(bearer_token)
 ta.filter()
