@@ -69,7 +69,7 @@ class TranslationAnswer(tweepy.StreamingClient):
     def on_connection_error(self):
         logger.error("connection error....")
 
-    def on_request_error(status_code):
+    def on_request_error(self, status_code):
         logger.error(f"request error.... {status_code}")
 
     
