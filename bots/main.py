@@ -29,11 +29,18 @@ trans = Translator()
 
 class TranslationAnswer(tweepy.StreamingClient):
     def on_connect(self):
+        rule_ids = []
         response = self.get_rules()
-        self.delete_rules(response)
+        for rule in response.data:
+            rule_ids.append(rule.id)
+
+        if(len(rule_ids) > 0):
+            self.delete_rules(rule_ids)
+
         self.add_rules(rules)
-        response = self.get_rules()
         logger.info("added rules")
+        
+        response = self.get_rules()
         for rule in response.data:
             logger.info(f"{rule}")
 
