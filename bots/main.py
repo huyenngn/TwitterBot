@@ -68,7 +68,7 @@ class TranslationAnswer(tweepy.StreamingClient):
 def main():
     while True:
         ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
-        while ta.running():
+        while ta.running:
             ta.filter(expansions=["author_id"])
 
 if __name__ == "__main__":
