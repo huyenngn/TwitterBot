@@ -5,6 +5,7 @@ from googletrans import Translator
 
 rules = [
     tweepy.StreamRule('from:srchafreen -is:retweet', tag='freen'),
+    tweepy.StreamRule('from:joohwangblink -is:retweet', tag='sofia'),
     tweepy.StreamRule('from:AngelssBecky -is:retweet', tag='becky')
 ]
 
@@ -28,10 +29,11 @@ trans = Translator()
 
 class TranslationAnswer(tweepy.StreamingClient):
     def on_connect(self):
-        self.delete_rules()
-        self.add_rules(rules)
-        logger.info("added rules")
         response = self.get_rules()
+        self.delete_rules(response)
+        self.add_rules(rules)
+        response = self.get_rules()
+        logger.info("added rules")
         for rule in response.data:
             logger.info(f"{rule}")
 

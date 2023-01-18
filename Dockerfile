@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye 
+FROM python:3.10-slim-bullseye
 
 COPY bots/main.py /bots/
 COPY requirements.txt /tmp
