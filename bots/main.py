@@ -35,8 +35,13 @@ api = tweepy.Client(
 
 trans = Translator()
 
+saved = time.perf_counter()
+
+
 class TranslationAnswer(tweepy.StreamingClient):
     def on_connect(self):
+        saved = time.perf_counter()
+
         rule_ids = []
         response = self.get_rules()
         for rule in response.data:
@@ -51,8 +56,10 @@ class TranslationAnswer(tweepy.StreamingClient):
         response = self.get_rules()
         for rule in response.data:
             logger.info(f"{rule}")
-
+        
     def on_tweet(self, tweet):
+        saved = time.perf_counter()
+
         result = api.get_user(id=tweet.author_id).data.username + ": "
         if result == FREEN_TWT:
             result = "F: "
@@ -79,7 +86,8 @@ class TranslationAnswer(tweepy.StreamingClient):
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
     ta.filter(expansions=["author_id"], threaded=True)
-    time.sleep(300)
+    while (time.perf_counter() - saved) < 90:
+        continue
 
 if __name__ == "__main__":
     while True:
