@@ -82,5 +82,4 @@ def main():
     ta.disconnect()
 
 if __name__ == "__main__":
-    while True:
         main()
