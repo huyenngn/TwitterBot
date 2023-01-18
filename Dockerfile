@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.9
 
 COPY bots/main.py /bots/
 COPY requirements.txt /tmp
