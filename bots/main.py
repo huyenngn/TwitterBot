@@ -3,10 +3,12 @@ import os
 import logging
 from googletrans import Translator
 
+FREEN_TWT = "srchafreen"
+BECKY_TWT = "AngelssBecky"
+
 rules = [
-    tweepy.StreamRule('from:srchafreen -is:retweet', tag='freen'),
-    tweepy.StreamRule('from:joohwangblink -is:retweet', tag='sofia'),
-    tweepy.StreamRule('from:AngelssBecky -is:retweet', tag='becky')
+    tweepy.StreamRule('from:'+FREEN_TWT+' -is:retweet', tag='freen'),
+    tweepy.StreamRule('from:'+BECKY_TWT+' -is:retweet', tag='becky')
 ]
 
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +24,8 @@ api = tweepy.Client(
     consumer_key=consumer_key,
     consumer_secret=consumer_secret,
     access_token=access_token,
-    access_token_secret=access_token_secret
+    access_token_secret=access_token_secret,
+    wait_on_rate_limit=True
 )
 
 trans = Translator()
@@ -45,7 +48,11 @@ class TranslationAnswer(tweepy.StreamingClient):
             logger.info(f"{rule}")
 
     def on_tweet(self, tweet):
-        result = "[EN] "
+        result = api.get_user(id=tweet.author_id).username + ": "
+        if result == FREEN_TWT:
+            result = "F: "
+        elif result == BECKY_TWT:
+            result = "B: "
         result += trans.translate((tweet.text), src='th', dst='en').text
         logger.info(f"got tweet... {tweet.id, tweet.text, result, tweet.author_id}")
         api.create_tweet(text=result, in_reply_to_tweet_id=tweet.id)
@@ -59,8 +66,10 @@ class TranslationAnswer(tweepy.StreamingClient):
         self.disconnect()
 
 def main():
-    ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
-    ta.filter()
+    while True:
+        ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
+        while ta.running():
+            ta.filter(expansions=["author_id"])
 
 if __name__ == "__main__":
     main()
