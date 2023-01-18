@@ -1,6 +1,7 @@
 import tweepy
 import os
 import logging
+import time
 from googletrans import Translator
 
 FREEN_TWT = "srchafreen"
@@ -30,7 +31,7 @@ api = tweepy.Client(
 
 trans = Translator()
 
-class TranslationAnswer(tweepy.StreamingClient):
+class TranslationAnswer(tweepy.asynchronous.AsyncStreamingClient):
     def on_connect(self):
         rule_ids = []
         response = self.get_rules()
@@ -66,10 +67,9 @@ class TranslationAnswer(tweepy.StreamingClient):
         self.disconnect()
 
 def main():
-    while True:
-        ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
-        while ta.running:
-            ta.filter(expansions=["author_id"])
+    ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
+    ta.filter(expansions=["author_id"])
+    time.sleep(100)
 
 if __name__ == "__main__":
     main()
