@@ -88,6 +88,7 @@ def main():
     ta.filter(expansions=["author_id"], threaded=True)
     while (time.perf_counter() - saved) < 90:
         continue
+    ta.disconnect()
 
 if __name__ == "__main__":
     while True:
