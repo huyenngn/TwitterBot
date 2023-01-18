@@ -9,6 +9,8 @@ BECKY_TWT = "AngelssBecky"
 
 rules = [
     # tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
+    tweepy.StreamRule('to:'+FREEN_TWT+' is:verified!', tag='freen_reply'),
+    tweepy.StreamRule('to:'+BECKY_TWT+' is:verified', tag='becky_reply'),
     tweepy.StreamRule('from:'+FREEN_TWT+' -is:retweet', tag='freen'),
     tweepy.StreamRule('from:'+BECKY_TWT+' -is:retweet', tag='becky')
 ]
@@ -63,12 +65,21 @@ class TranslationAnswer(tweepy.StreamingClient):
         api.retweet(tweet.id)
 
     def on_errors(self, errors):
-        logger.error(f"got errors.... {errors}")
+        logger.error(errors)
+
+    def on_closed(self, response):
+        logger.error(f"closed by twt.... {response}")
         time.sleep(300)
+
+    def on_request_error(self, status_code):
+        logger.error(f"request error.... {status_code}")
+        time.sleep(300)
+
 
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
     ta.filter(expansions=["author_id"], threaded=True)
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()
