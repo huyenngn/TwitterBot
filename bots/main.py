@@ -64,12 +64,6 @@ class TranslationAnswer(tweepy.StreamingClient):
 
     def on_errors(self, errors):
         logger.error(f"got errors.... {errors}")
-
-    def on_connection_error(self):
-        logger.error("connection error....")
-
-    def on_request_error(self, status_code):
-        logger.error(f"request error.... {status_code}... sleeping for 5 mins")
         time.sleep(300)
 
 def main():
