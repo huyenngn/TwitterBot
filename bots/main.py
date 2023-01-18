@@ -27,7 +27,8 @@ api = tweepy.Client(
 trans = Translator()
 
 class TranslationAnswer(tweepy.StreamingClient):
-    def on_connect(self): 
+    def on_connect(self):
+        self.delete_rules()
         self.add_rules(rules)
         logger.info("added rules")
         response = self.get_rules()
