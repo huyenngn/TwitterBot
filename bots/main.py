@@ -64,9 +64,6 @@ class TranslationAnswer(tweepy.StreamingClient):
     def on_errors(self, errors):
         logger.error(errors)
 
-    def on_connection_error(self):
-        self.disconnect()
-
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
     ta.filter(expansions=["author_id"], threaded=True)
