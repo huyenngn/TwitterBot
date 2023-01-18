@@ -74,15 +74,6 @@ class TranslationAnswer(tweepy.StreamingClient):
     def on_errors(self, errors):
         logger.error(errors)
 
-    def on_closed(self, response):
-        logger.error(f"closed by twt.... {response}")
-        time.sleep(300)
-
-    def on_request_error(self, status_code):
-        logger.error(f"request error.... {status_code}")
-        time.sleep(300)
-
-
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
     ta.filter(expansions=["author_id"], threaded=True)
