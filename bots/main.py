@@ -1,7 +1,6 @@
 import tweepy
 import os
 import logging
-import time
 from googletrans import Translator
 
 FREEN_TWT = "srchafreen"
