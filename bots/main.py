@@ -63,16 +63,14 @@ class TranslationAnswer(tweepy.StreamingClient):
         api.retweet(tweet.id)
 
     def on_errors(self, errors):
-        logger.error(f"just gonna wait this one out.... {errors}")
-        time.sleep(300)
+        logger.error(f"got errors.... {errors}")
 
     def on_connection_error(self):
         logger.error("connection error....")
 
     def on_request_error(self, status_code):
-        logger.error(f"request error.... {status_code}")
-
-    
+        logger.error(f"request error.... {status_code}... sleeping for 5 mins")
+        time.sleep(300)
 
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
