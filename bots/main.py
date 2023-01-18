@@ -8,6 +8,7 @@ FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
 rules = [
+    # tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
     tweepy.StreamRule('from:'+FREEN_TWT+' -is:retweet', tag='freen'),
     tweepy.StreamRule('from:'+BECKY_TWT+' -is:retweet', tag='becky')
 ]
@@ -26,12 +27,13 @@ api = tweepy.Client(
     consumer_secret=consumer_secret,
     access_token=access_token,
     access_token_secret=access_token_secret,
+    bearer_token = bearer_token,
     wait_on_rate_limit=True
 )
 
 trans = Translator()
 
-class TranslationAnswer(tweepy.asynchronous.AsyncStreamingClient):
+class TranslationAnswer(tweepy.StreamingClient):
     def on_connect(self):
         rule_ids = []
         response = self.get_rules()
@@ -49,7 +51,7 @@ class TranslationAnswer(tweepy.asynchronous.AsyncStreamingClient):
             logger.info(f"{rule}")
 
     def on_tweet(self, tweet):
-        result = api.get_user(id=tweet.author_id).username + ": "
+        result = api.get_user(id=tweet.author_id).data.username + ": "
         if result == FREEN_TWT:
             result = "F: "
         elif result == BECKY_TWT:
@@ -68,8 +70,7 @@ class TranslationAnswer(tweepy.asynchronous.AsyncStreamingClient):
 
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
-    ta.filter(expansions=["author_id"])
-    time.sleep(100)
+    ta.filter(expansions=["author_id"], threaded=True)
 
 if __name__ == "__main__":
     main()
