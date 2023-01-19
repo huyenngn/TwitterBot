@@ -3,6 +3,7 @@ import tweepy
 import os
 import logging
 from googletrans import Translator
+import requests
 
 DEBUG = True
 
@@ -43,6 +44,14 @@ trans = Translator()
 
 saved = time.perf_counter()
 
+def bearer_oauth(r):
+    r.headers["Authorization"] = f"Bearer {bearer_token}"
+    return r
+
+params = {"x-rate-limit-remaining": "search"}
+    
+response = requests.get("https://api.twitter.com/2/tweets/search/recent", params=params, auth=bearer_oauth)
+
 
 class TranslationAnswer(tweepy.StreamingClient):
     def on_connect(self):
@@ -79,12 +88,10 @@ class TranslationAnswer(tweepy.StreamingClient):
 
     def on_errors(self, errors):
         logger.error(errors)
-
-    def on_request_error(self, status_code):
-        logger.error(f"request error.... {status_code}")
-        if (status_code == 420) or (status_code == 429):
-            while (time.perf_counter() - saved) < 320:
-                time.sleep(1)
+    
+    def on_keep_alive(self):
+        self.disconnect()
+        main()
 
     def on_exception(self, exception):
         logger.exception(exception)
@@ -93,10 +100,7 @@ class TranslationAnswer(tweepy.StreamingClient):
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True, max_retries = 20)
     ta.filter(expansions=["author_id"])
-    while (time.perf_counter() - saved) < 90:
-        time.sleep(1)
-    ta.disconnect()
-    main()
+    logger.info(response.headers)
 
 if __name__ == "__main__":
     main()
