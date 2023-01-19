@@ -180,7 +180,7 @@ class TranslationAnswer(Client):
         
         for response_line in response.iter_lines():
             if response_line:
-                if response_line is "\n":
+                if response_line == "\n":
                     self.get_stream()
                 json_response = json.loads(response_line)
                 tweet_id = json_response["data"]["id"]
