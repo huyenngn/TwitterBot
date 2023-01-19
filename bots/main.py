@@ -9,16 +9,17 @@ DEBUG = True
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
+consumer_key = os.getenv("CONSUMER_KEY")
+consumer_secret = os.getenv("CONSUMER_SECRET")
+access_token = os.getenv("ACCESS_TOKEN")
+access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+bearer_token = os.getenv("BEARER_TOKEN")
+
 if DEBUG:
     rules = [
     tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
     ]
 else:
-    consumer_key = os.getenv("CONSUMER_KEY")
-    consumer_secret = os.getenv("CONSUMER_SECRET")
-    access_token = os.getenv("ACCESS_TOKEN")
-    access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
-    bearer_token = os.getenv("BEARER_TOKEN")
     rules = [
     tweepy.StreamRule('to:'+FREEN_TWT+' is:verified!', tag='freen_reply'),
     tweepy.StreamRule('to:'+BECKY_TWT+' is:verified', tag='becky_reply'),
