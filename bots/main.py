@@ -82,7 +82,6 @@ class TranslationAnswer(tweepy.StreamingClient):
 
     def on_exception(self, exception):
         logger.exception(exception)
-        main()
 
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True, max_retries = 20)
@@ -90,7 +89,6 @@ def main():
     while (time.perf_counter() - saved) < 90:
         time.sleep(1)
     ta.disconnect()
-    main()
 
 if __name__ == "__main__":
     main()
