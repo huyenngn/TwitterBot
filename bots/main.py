@@ -41,7 +41,7 @@ def backoff(response):
     limit = response.headers['x-rate-limit-remaining']
     logger.error(f"Error: (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
     saved = time.perf_counter()
-    while (time.perf_counter() - saved) < limit:
+    while (time.perf_counter() - saved) < (limit+20):
         time.sleep(1)
 
 class Client:
@@ -55,6 +55,9 @@ class Client:
         self.trans = Translator()
         self.id = 1601180254931980288
 
+        logger.info("Set up client.")
+
+
     def like(self, tweet_id):
         payload = {"tweet_id": tweet_id}
 
@@ -66,7 +69,7 @@ class Client:
             backoff(response)
             self.like()
 
-        logger.info(f"Response code: {response.status_code}")
+        logger.info(f"Liked. Response code: {response.status_code}")
 
     def retweet(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -78,7 +81,7 @@ class Client:
             backoff(response)
             self.retweet()
 
-        logger.info(f"Response code: {response.status_code}")
+        logger.info(f"Retweeted. Response code: {response.status_code}")
 
     def create_tweet(self, **kwargs):
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
@@ -104,7 +107,7 @@ class Client:
             backoff(response)
             self.create_tweet(kwargs)
 
-        logger.info(f"Response code: {response.status_code}")
+        logger.info(f"Tweeted. Response code: {response.status_code}")
 
     def get_rules(self):
         response = requests.get(
@@ -113,6 +116,9 @@ class Client:
         if response.status_code != 200:
             backoff(response)
             self.get_rules()
+
+        logger.info(f"Got rules. Response code: {response.status_code}")
+
         print(json.dumps(response.json()))
         return response.json()
 
@@ -132,6 +138,9 @@ class Client:
         if response.status_code != 200:
             backoff(response)
             self.delete_all_rules()
+        
+        logger.info(f"Deleted rules. Response code: {response.status_code}")
+            
         print(json.dumps(response.json()))
 
     def set_rules(self):
@@ -144,6 +153,9 @@ class Client:
         if response.status_code != 201:
             backoff(response)
             self.set_rules()
+
+        logger.info(f"Set rules. Response code: {response.status_code}")
+
         print(json.dumps(response.json()))
 
     def get_stream(self):
@@ -156,7 +168,8 @@ class Client:
             stream=True
         )
 
-        print(response.status_code)
+        logger.info(f"Filtered stream. Response code: {response.status_code}")
+
         if response.status_code != 200:
             backoff(response)
             self.get_stream()
