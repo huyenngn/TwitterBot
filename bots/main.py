@@ -6,7 +6,7 @@ import json
 from googletrans import Translator
 import logging
 
-DEBUG = False
+DEBUG = True
 
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
@@ -184,6 +184,7 @@ class TranslationAnswer(Client):
         for response_line in response.iter_lines():
             if response_line:
                 if response_line == "\n":
+                    logger.info("Recieved heartbeat.")
                     self.get_stream()
                 
                 json_response = json.loads(response_line)
