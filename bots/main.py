@@ -11,9 +11,12 @@ DEBUG = False
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
+FREEN_EMOJI = "\ud83d\udc30"
+BECKY_EMOJI = "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f"
+
 if DEBUG:
     stream_rules = [
-    {"value": 'from:joohwangblink -is:retweet', "tag": "debug"}
+    {"value": 'from:lichaengwarrior -is:retweet', "tag": "debug"}
     ]
 else:
     stream_rules = [
@@ -182,12 +185,23 @@ class TranslationAnswer(Client):
             if response_line:
                 if response_line == "\n":
                     self.get_stream()
+                
                 json_response = json.loads(response_line)
+
+                if json_response["matching_rules"][0]["tag"] == "freen":
+                    translation = FREEN_EMOJI + ": "
+                elif json_response["matching_rules"][0]["tag"] == "becky":
+                    translation = BECKY_EMOJI + ": "
+                else:
+                    translation = "[en] "
+                translation += self.trans.translate(json_response["data"]["text"], src='th', dst='en').text
+
                 tweet_id = json_response["data"]["id"]
-                translation = self.trans.translate(json_response["data"]["text"], src='th', dst='en').text
+
                 self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
                 self.like(tweet_id)
                 self.retweet(tweet_id)
+
                 print(json.dumps(json_response, indent=4, sort_keys=True))
             
 def main():
