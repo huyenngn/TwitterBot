@@ -74,12 +74,23 @@ class TranslationAnswer(tweepy.StreamingClient):
     def on_errors(self, errors):
         logger.error(errors)
 
+    def on_request_error(self, status_code):
+        logger.error(f"request error.... {status_code}")
+        if (status_code == 420) or (status_code == 429):
+            while (time.perf_counter() - saved) < 320:
+                time.sleep(1)
+
+    def on_exception(self, exception):
+        logger.exception(exception)
+        main()
+
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True, max_retries = 20)
     ta.filter(expansions=["author_id"], threaded=True)
     while (time.perf_counter() - saved) < 90:
-        continue
+        time.sleep(1)
     ta.disconnect()
+    main()
 
 if __name__ == "__main__":
-        main()
+    main()
