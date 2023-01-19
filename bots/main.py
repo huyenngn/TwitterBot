@@ -10,11 +10,6 @@ FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
 if DEBUG:
-    consumer_key = "eas"
-    consumer_secret = "dsfds"
-    access_token = "afs"
-    access_token_secret = "efa"
-    bearer_token = "afdsd"
     rules = [
     tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
     ]
