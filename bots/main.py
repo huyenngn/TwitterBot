@@ -1,3 +1,4 @@
+import time
 from requests_oauthlib import OAuth1Session
 import os
 import requests
@@ -36,6 +37,13 @@ def bearer_oauth(r):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+def backoff(response):
+    limit = response.headers['x-rate-limit-remaining']
+    logger.error(f"Error: (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+    saved = time.perf_counter()
+    while (time.perf_counter() - saved) < limit:
+        time.sleep(1)
+
 class Client:
     def __init__(self):
         self.api = OAuth1Session(
@@ -55,7 +63,8 @@ class Client:
         )
 
         if response.status_code != 200:
-            logger.error(f"Request returned an error: {response.status_code} {response.text}")
+            backoff(response)
+            self.like()
 
         logger.info(f"Response code: {response.status_code}")
 
@@ -66,7 +75,8 @@ class Client:
         )
 
         if response.status_code != 200:
-            logger.error(f"Request returned an error: {response.status_code} {response.text}")
+            backoff(response)
+            self.retweet()
 
         logger.info(f"Response code: {response.status_code}")
 
@@ -91,7 +101,8 @@ class Client:
         )
 
         if response.status_code != 201:
-            logger.error(f"Request returned an error: {response.status_code} {response.text}")
+            backoff(response)
+            self.create_tweet(kwargs)
 
         logger.info(f"Response code: {response.status_code}")
 
@@ -100,7 +111,8 @@ class Client:
             "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
         )
         if response.status_code != 200:
-            logger.error(f"Cannot get rules (HTTP {response.status_code}): {response.text}")
+            backoff(response)
+            self.get_rules()
         print(json.dumps(response.json()))
         return response.json()
 
@@ -118,7 +130,8 @@ class Client:
             json=payload
         )
         if response.status_code != 200:
-            logger.error(f"Cannot delete rules (HTTP {response.status_code}): {response.text}")
+            backoff(response)
+            self.delete_all_rules()
         print(json.dumps(response.json()))
 
     def set_rules(self):
@@ -129,10 +142,13 @@ class Client:
             json=payload,
         )
         if response.status_code != 201:
-            logger.error(f"Cannot add rules (HTTP {response.status_code}): {response.text}")
+            backoff(response)
+            self.set_rules()
         print(json.dumps(response.json()))
 
     def get_stream(self):
+        self.delete_all_rules()
+        self.set_rules()
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
             params={"expansions": "author_id"},
@@ -142,8 +158,8 @@ class Client:
 
         print(response.status_code)
         if response.status_code != 200:
-            limit = response.headers['x-rate-limit-remaining']
-            logger.error(f"Cannot get stream (HTTP {response.status_code}): {response.text}... {limit} seconds")
+            backoff(response)
+            self.get_stream()
         
         for response_line in response.iter_lines():
             if response_line:
@@ -157,8 +173,6 @@ class Client:
 
 def main():
     ta = Client()
-    ta.delete_all_rules()
-    ta.set_rules()
     ta.get_stream()
 
 
