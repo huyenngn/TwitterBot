@@ -20,7 +20,7 @@ if DEBUG:
     ]
 else:
     stream_rules = [
-    {"value": 'to:'+FREEN_TWT+' is:verified!', "tag": "freen_reply"},
+    {"value": 'to:'+FREEN_TWT+' is:verified', "tag": "freen_reply"},
     {"value": 'to:'+BECKY_TWT+' is:verified', "tag": "becky_reply"},
     {"value": 'from:'+FREEN_TWT+' -is:retweet', "tag": "freen"},
     {"value": 'from:'+BECKY_TWT+' -is:retweet', "tag": "becky"}
