@@ -4,25 +4,32 @@ import os
 import logging
 from googletrans import Translator
 
+DEBUG = True
+
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
-rules = [
-    # tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
+if DEBUG:
+    consumer_key = "eas"
+    consumer_secret = "dsfds"
+    access_token = "afs"
+    access_token_secret = "efa"
+    bearer_token = "afdsd"
+    rules = [
+    tweepy.StreamRule('from:joohwangblink -is:retweet', tag='debug'),
+    ]
+else:
+    consumer_key = os.getenv("CONSUMER_KEY")
+    consumer_secret = os.getenv("CONSUMER_SECRET")
+    access_token = os.getenv("ACCESS_TOKEN")
+    access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+    bearer_token = os.getenv("BEARER_TOKEN")
+    rules = [
     tweepy.StreamRule('to:'+FREEN_TWT+' is:verified!', tag='freen_reply'),
     tweepy.StreamRule('to:'+BECKY_TWT+' is:verified', tag='becky_reply'),
     tweepy.StreamRule('from:'+FREEN_TWT+' -is:retweet', tag='freen'),
     tweepy.StreamRule('from:'+BECKY_TWT+' -is:retweet', tag='becky')
-]
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-
-consumer_key = os.getenv("CONSUMER_KEY")
-consumer_secret = os.getenv("CONSUMER_SECRET")
-access_token = os.getenv("ACCESS_TOKEN")
-access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
-bearer_token = os.getenv("BEARER_TOKEN")
+    ]
 
 api = tweepy.Client(
     consumer_key=consumer_key,
@@ -32,6 +39,9 @@ api = tweepy.Client(
     bearer_token = bearer_token,
     wait_on_rate_limit=True
 )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 trans = Translator()
 
@@ -82,13 +92,15 @@ class TranslationAnswer(tweepy.StreamingClient):
 
     def on_exception(self, exception):
         logger.exception(exception)
+        main()
 
 def main():
     ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True, max_retries = 20)
-    ta.filter(expansions=["author_id"], threaded=True)
+    ta.filter(expansions=["author_id"])
     while (time.perf_counter() - saved) < 90:
         time.sleep(1)
     ta.disconnect()
+    main()
 
 if __name__ == "__main__":
     main()
