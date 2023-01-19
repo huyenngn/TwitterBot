@@ -75,7 +75,7 @@ class TranslationAnswer(tweepy.StreamingClient):
         logger.error(errors)
 
 def main():
-    ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True)
+    ta = TranslationAnswer(bearer_token=bearer_token, wait_on_rate_limit=True, max_retries = 20)
     ta.filter(expansions=["author_id"], threaded=True)
     while (time.perf_counter() - saved) < 90:
         continue
