@@ -41,7 +41,7 @@ def backoff(response):
     limit = response.headers['x-rate-limit-remaining']
     logger.error(f"Error: (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
     saved = time.perf_counter()
-    while (time.perf_counter() - saved) < (limit+20):
+    while (time.perf_counter() - saved) < (int(limit)+20):
         time.sleep(1)
 
 class Client:
