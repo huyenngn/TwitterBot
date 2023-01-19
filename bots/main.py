@@ -6,17 +6,17 @@ import json
 from googletrans import Translator
 import logging
 
-DEBUG = True
+DEBUG = False
 
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
 if DEBUG:
-    rules = [
+    stream_rules = [
     {"value": 'from:joohwangblink -is:retweet', "tag": "debug"}
     ]
 else:
-    rules = [
+    stream_rules = [
     {"value": 'to:'+FREEN_TWT+' is:verified!', "tag": "freen_reply"},
     {"value": 'to:'+BECKY_TWT+' is:verified', "tag": "becky_reply"},
     {"value": 'from:'+FREEN_TWT+' -is:retweet', "tag": "freen"},
@@ -52,7 +52,6 @@ class Client:
         resource_owner_key=access_token,
         resource_owner_secret=access_token_secret,
         )
-        self.trans = Translator()
         self.id = 1601180254931980288
 
         logger.info("Set up client.")
@@ -144,7 +143,7 @@ class Client:
         print(json.dumps(response.json()))
 
     def set_rules(self):
-        payload = {"add": rules}
+        payload = {"add": stream_rules}
         response = requests.post(
             "https://api.twitter.com/2/tweets/search/stream/rules",
             auth=bearer_oauth,
@@ -157,6 +156,11 @@ class Client:
         logger.info(f"Set rules. Response code: {response.status_code}")
 
         print(json.dumps(response.json()))
+
+class TranslationAnswer(Client):
+    def __init__(self):
+        self.trans = Translator()
+        super(TranslationAnswer, self).__init__()
 
     def get_stream(self):
         self.delete_all_rules()
@@ -176,6 +180,8 @@ class Client:
         
         for response_line in response.iter_lines():
             if response_line:
+                if response_line is "\n":
+                    self.get_stream()
                 json_response = json.loads(response_line)
                 tweet_id = json_response["data"]["id"]
                 translation = self.trans.translate(json_response["data"]["text"], src='th', dst='en').text
@@ -183,11 +189,10 @@ class Client:
                 self.like(tweet_id)
                 self.retweet(tweet_id)
                 print(json.dumps(json_response, indent=4, sort_keys=True))
-
+            
 def main():
-    ta = Client()
+    ta = TranslationAnswer()
     ta.get_stream()
-
 
 if __name__ == "__main__":
     main()
