@@ -3,7 +3,24 @@ import os
 import requests
 import json
 from googletrans import Translator
+import logging
 
+DEBUG = True
+
+FREEN_TWT = "srchafreen"
+BECKY_TWT = "AngelssBecky"
+
+if DEBUG:
+    rules = [
+    {"value": 'from:joohwangblink -is:retweet', "tag": "debug"}
+    ]
+else:
+    rules = [
+    {"value": 'to:'+FREEN_TWT+' is:verified!', "tag": "freen_reply"},
+    {"value": 'to:'+BECKY_TWT+' is:verified', "tag": "becky_reply"},
+    {"value": 'from:'+FREEN_TWT+' -is:retweet', "tag": "freen"},
+    {"value": 'from:'+BECKY_TWT+' -is:retweet', "tag": "becky"}
+    ]
 
 consumer_key = os.getenv("CONSUMER_KEY")
 consumer_secret = os.getenv("CONSUMER_SECRET")
@@ -15,6 +32,9 @@ def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
     r.headers["User-Agent"] = "v2FilteredStreamPython"
     return r
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 class Client:
     def __init__(self):
@@ -35,11 +55,9 @@ class Client:
         )
 
         if response.status_code != 200:
-            raise Exception(
-                "Request returned an error: {} {}".format(response.status_code, response.text)
-            )
+            logger.error(f"Request returned an error: {response.status_code} {response.text}")
 
-        print("Response code: {}".format(response.status_code))
+        logger.info(f"Response code: {response.status_code}")
 
     def retweet(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -48,11 +66,9 @@ class Client:
         )
 
         if response.status_code != 200:
-            raise Exception(
-                "Request returned an error: {} {}".format(response.status_code, response.text)
-            )
+            logger.error(f"Request returned an error: {response.status_code} {response.text}")
 
-        print("Response code: {}".format(response.status_code))
+        logger.info(f"Response code: {response.status_code}")
 
     def create_tweet(self, **kwargs):
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
@@ -75,18 +91,16 @@ class Client:
         )
 
         if response.status_code != 201:
-            raise Exception(f"Request returned an error: {response.status_code} {response.text}")
+            logger.error(f"Request returned an error: {response.status_code} {response.text}")
 
-        print(f"Response code: {response.status_code}")
+        logger.info(f"Response code: {response.status_code}")
 
     def get_rules(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
         )
         if response.status_code != 200:
-            raise Exception(
-                "Cannot get rules (HTTP {}): {}".format(response.status_code, response.text)
-            )
+            logger.error(f"Cannot get rules (HTTP {response.status_code}): {response.text}")
         print(json.dumps(response.json()))
         return response.json()
 
@@ -104,14 +118,10 @@ class Client:
             json=payload
         )
         if response.status_code != 200:
-            raise Exception(
-                "Cannot delete rules (HTTP {}): {}".format(
-                    response.status_code, response.text
-                )
-            )
+            logger.error(f"Cannot delete rules (HTTP {response.status_code}): {response.text}")
         print(json.dumps(response.json()))
 
-    def set_rules(self, rules):
+    def set_rules(self):
         payload = {"add": rules}
         response = requests.post(
             "https://api.twitter.com/2/tweets/search/stream/rules",
@@ -119,9 +129,7 @@ class Client:
             json=payload,
         )
         if response.status_code != 201:
-            raise Exception(
-                "Cannot add rules (HTTP {}): {}".format(response.status_code, response.text)
-            )
+            logger.error(f"Cannot add rules (HTTP {response.status_code}): {response.text}")
         print(json.dumps(response.json()))
 
     def get_stream(self):
@@ -134,11 +142,8 @@ class Client:
 
         print(response.status_code)
         if response.status_code != 200:
-            raise Exception(
-                "Cannot get stream (HTTP {}): {}... {} seconds".format(
-                    response.status_code, response.text, response.headers['x-rate-limit-remaining']
-                )
-            )
+            limit = response.headers['x-rate-limit-remaining']
+            logger.error(f"Cannot get stream (HTTP {response.status_code}): {response.text}... {limit} seconds")
         
         for response_line in response.iter_lines():
             if response_line:
