@@ -40,12 +40,26 @@ def bearer_oauth(r):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+wait_time = 5
+
 def backoff(response):
-    limit = response.headers['x-rate-limit-remaining']
-    logger.error(f"Error: (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
-    saved = time.perf_counter()
-    while (time.perf_counter() - saved) < (int(limit)+20):
-        time.sleep(1)
+    if (response.status_code >= 400) and (response.status_code < 420):
+        logger.error(f"Request returned an error: {response.status_code} {response.text}.")
+        raise Exception("Exiting.")
+    elif (response.status_code >= 420) and (response.status_code <= 429):
+        limit = response.headers['x-rate-limit-remaining']
+        logger.error(f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+        saved = time.perf_counter()
+        while (time.perf_counter() - saved) < (int(limit)+20):
+            time.sleep(1)
+    else:
+        wait_time = max(wait_time, 320)
+        logger.error(f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {wait_time}.")
+        saved = time.perf_counter()
+        while (time.perf_counter() - saved) < wait_time:
+            time.sleep(1)
+        wait_time *= 2
+
 
 class Client:
     def __init__(self):
@@ -70,7 +84,7 @@ class Client:
         if response.status_code != 200:
             backoff(response)
             self.like()
-
+        
         logger.info(f"Liked. Response code: {response.status_code}")
 
     def retweet(self, tweet_id):
@@ -82,7 +96,7 @@ class Client:
         if response.status_code != 200:
             backoff(response)
             self.retweet()
-
+        
         logger.info(f"Retweeted. Response code: {response.status_code}")
 
     def create_tweet(self, **kwargs):
@@ -140,7 +154,7 @@ class Client:
         if response.status_code != 200:
             backoff(response)
             self.delete_all_rules()
-        
+
         logger.info(f"Deleted rules. Response code: {response.status_code}")
             
         print(json.dumps(response.json()))
@@ -183,6 +197,7 @@ class TranslationAnswer(Client):
         
         for response_line in response.iter_lines():
             logger.info("Recieved content or heartbeat.")
+            save = time.perf_counter()
             if response_line:                
                 json_response = json.loads(response_line)
 
@@ -201,8 +216,8 @@ class TranslationAnswer(Client):
                 self.retweet(tweet_id)
 
                 print(json.dumps(json_response, indent=4, sort_keys=True))
-        
-        logger.info("About to disconnect.")
+            if (time.perf_counter() - save) > 30:
+                logger.info("About to disconnect.")
 
             
 def main():
