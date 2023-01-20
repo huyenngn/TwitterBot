@@ -41,6 +41,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 wait_time = 5
+last_response_time = time.perf_counter()
 
 def backoff(response):
     if (response.status_code >= 400) and (response.status_code < 420):
@@ -53,7 +54,7 @@ def backoff(response):
         while (time.perf_counter() - saved) < (int(limit)+20):
             time.sleep(1)
     else:
-        wait_time = max(wait_time, 320)
+        wait_time = min(wait_time, 320)
         logger.error(f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {wait_time}.")
         saved = time.perf_counter()
         while (time.perf_counter() - saved) < wait_time:
@@ -197,7 +198,7 @@ class TranslationAnswer(Client):
         
         for response_line in response.iter_lines():
             logger.info("Recieved content or heartbeat.")
-            save = time.perf_counter()
+            last_response_time = time.perf_counter()
             if response_line:                
                 json_response = json.loads(response_line)
 
@@ -216,13 +217,14 @@ class TranslationAnswer(Client):
                 self.retweet(tweet_id)
 
                 print(json.dumps(json_response, indent=4, sort_keys=True))
-            if (time.perf_counter() - save) > 30:
-                logger.info("About to disconnect.")
-
             
 def main():
     ta = TranslationAnswer()
     ta.get_stream()
+    while True:
+        if (time.perf_counter() - last_response_time) > 30:
+            logger.info("About to disconnect.")
+            ta.get_stream()
 
 if __name__ == "__main__":
     main()
