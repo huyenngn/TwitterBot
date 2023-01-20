@@ -181,11 +181,9 @@ class TranslationAnswer(Client):
             backoff(response)
             self.get_stream()
         
-        saved = time.perf_counter()
         for response_line in response.iter_lines():
-            if response_line:
-                saved = time.perf_counter()
-                
+            logger.info("Recieved content or heartbeat.")
+            if response_line:                
                 json_response = json.loads(response_line)
 
                 if json_response["matching_rules"][0]["tag"] == "freen":
@@ -203,10 +201,9 @@ class TranslationAnswer(Client):
                 self.retweet(tweet_id)
 
                 print(json.dumps(json_response, indent=4, sort_keys=True))
-                
-            elif (time.perf_counter() - saved) > 90:
-                    logger.info("About to disconnect. Restarting stream.")
-                    self.get_stream()
+        
+        logger.info("About to disconnect.")
+
             
 def main():
     ta = TranslationAnswer()
