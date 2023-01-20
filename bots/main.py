@@ -5,8 +5,9 @@ import requests
 import json
 from googletrans import Translator
 import logging
+import threading
 
-DEBUG = False
+DEBUG = True
 
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
@@ -16,7 +17,7 @@ BECKY_EMOJI = "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f"
 
 if DEBUG:
     stream_rules = [
-    {"value": 'from:lichaengwarrior -is:retweet', "tag": "debug"}
+    {"value": 'from:joohwangblink -is:retweet', "tag": "debug"}
     ]
 else:
     stream_rules = [
@@ -41,7 +42,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 wait_time = 5
-last_response_time = time.time()
 
 def backoff(response):
     if (response.status_code >= 400) and (response.status_code < 420):
@@ -178,6 +178,8 @@ class Client:
 class TranslationAnswer(Client):
     def __init__(self):
         self.trans = Translator()
+        self.last_response_time = None
+
         super(TranslationAnswer, self).__init__()
 
     def get_stream(self):
@@ -186,7 +188,7 @@ class TranslationAnswer(Client):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
             params={"expansions": "author_id"},
-            auth=bearer_oauth, 
+            auth=bearer_oauth,
             stream=True
         )
 
@@ -198,7 +200,7 @@ class TranslationAnswer(Client):
         
         for response_line in response.iter_lines():
             logger.info("Recieved content or heartbeat.")
-            last_response_time = time.time()
+            self.last_response_time = time.time()
             if response_line:                
                 json_response = json.loads(response_line)
 
@@ -220,13 +222,19 @@ class TranslationAnswer(Client):
             
 def main():
     ta = TranslationAnswer()
-    ta.get_stream()
+    t_stream = threading.Thread(target=ta.get_stream)
+    t_stream.start()
     while True:
-        temp = (time.time() - last_response_time)
-        print(temp)
-        if temp > 30:
-            logger.info("About to disconnect. Reconnecting.")
-            ta.get_stream()
+        passed = time.time() - ta.last_response_time
+        logger.info(f"Time passed with no heartbeat: {passed}")
+        if (ta.last_response_time is not None) and (passed > 20):
+            logger.info("About to disconnect.")
+            t_stream.join()
+            logger.info("Disconnected.")
+            t_stream = threading.Thread(target=ta.get_stream)
+            t_stream.start()
+        time.sleep(10)
+    
 
 if __name__ == "__main__":
     main()
