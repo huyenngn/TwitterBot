@@ -7,13 +7,14 @@ from googletrans import Translator
 import logging
 import threading
 
-DEBUG = True
+DEBUG = False
 
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
 
 FREEN_EMOJI = "\ud83d\udc30"
 BECKY_EMOJI = "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f"
+STRANGER_EMOJI = "\ud83d\udc64"
 
 if DEBUG:
     stream_rules = [
@@ -187,7 +188,8 @@ class TranslationAnswer(Client):
         self.set_rules()
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id"},
+            params={"expansions":"author_id",
+                    "tweet.fields":"referenced_tweets"},
             auth=bearer_oauth,
             stream=True
         )
@@ -209,7 +211,7 @@ class TranslationAnswer(Client):
                 elif json_response["matching_rules"][0]["tag"] == "becky":
                     translation = BECKY_EMOJI + ": "
                 else:
-                    translation = "[en] "
+                    translation = STRANGER_EMOJI + ": "
                 translation += self.trans.translate(json_response["data"]["text"], src='th', dst='en').text
 
                 tweet_id = json_response["data"]["id"]
@@ -227,7 +229,7 @@ def main():
     while True:
         if ta.last_response_time is not None:
             passed = time.time() - ta.last_response_time
-            logger.info(f"Time passed with no heartbeat: {passed}")
+            logger.info(passed)
         if (ta.last_response_time is not None) and (passed > 20):
             logger.info("About to disconnect.")
             t_stream.join()
