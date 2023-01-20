@@ -48,10 +48,10 @@ def backoff(response):
         logger.error(f"Request returned an error: {response.status_code} {response.text}.")
         raise Exception("Exiting.")
     elif (response.status_code >= 420) and (response.status_code <= 429):
-        limit = response.headers['x-rate-limit-remaining']
+        limit = int(response.headers['x-rate-limit-reset']) - time.perf_counter() + 5
         logger.error(f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
         saved = time.perf_counter()
-        while (time.perf_counter() - saved) < (int(limit)+20):
+        while (time.perf_counter() - saved) < limit:
             time.sleep(1)
     else:
         wait_time = min(wait_time, 320)
@@ -191,7 +191,7 @@ class TranslationAnswer(Client):
         )
 
         logger.info(f"Filtered stream. Response code: {response.status_code}")
-
+        print(response.headers)
         if response.status_code != 200:
             backoff(response)
             self.get_stream()
