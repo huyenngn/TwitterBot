@@ -225,8 +225,9 @@ def main():
     t_stream = threading.Thread(target=ta.get_stream)
     t_stream.start()
     while True:
-        passed = time.time() - ta.last_response_time
-        logger.info(f"Time passed with no heartbeat: {passed}")
+        if ta.last_response_time is not None:
+            passed = time.time() - ta.last_response_time
+            logger.info(f"Time passed with no heartbeat: {passed}")
         if (ta.last_response_time is not None) and (passed > 20):
             logger.info("About to disconnect.")
             t_stream.join()
