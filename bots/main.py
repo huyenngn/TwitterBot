@@ -6,7 +6,7 @@ import json
 from googletrans import Translator
 import logging
 
-DEBUG = True
+DEBUG = False
 
 FREEN_TWT = "srchafreen"
 BECKY_TWT = "AngelssBecky"
@@ -41,23 +41,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 wait_time = 5
-last_response_time = time.perf_counter()
+last_response_time = time.time()
 
 def backoff(response):
     if (response.status_code >= 400) and (response.status_code < 420):
         logger.error(f"Request returned an error: {response.status_code} {response.text}.")
         raise Exception("Exiting.")
     elif (response.status_code >= 420) and (response.status_code <= 429):
-        limit = int(response.headers['x-rate-limit-reset']) - time.perf_counter() + 5
+        limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
         logger.error(f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
-        saved = time.perf_counter()
-        while (time.perf_counter() - saved) < limit:
+        saved = time.time()
+        while (time.time() - saved) < limit:
             time.sleep(1)
     else:
         wait_time = min(wait_time, 320)
         logger.error(f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {wait_time}.")
-        saved = time.perf_counter()
-        while (time.perf_counter() - saved) < wait_time:
+        saved = time.time()
+        while (time.time() - saved) < wait_time:
             time.sleep(1)
         wait_time *= 2
 
@@ -70,10 +70,9 @@ class Client:
         resource_owner_key=access_token,
         resource_owner_secret=access_token_secret,
         )
-        self.id = 1601180254931980288
+        self.id = "1601180254931980288"
 
         logger.info("Set up client.")
-
 
     def like(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -175,6 +174,7 @@ class Client:
 
         print(json.dumps(response.json()))
 
+
 class TranslationAnswer(Client):
     def __init__(self):
         self.trans = Translator()
@@ -198,7 +198,7 @@ class TranslationAnswer(Client):
         
         for response_line in response.iter_lines():
             logger.info("Recieved content or heartbeat.")
-            last_response_time = time.perf_counter()
+            last_response_time = time.time()
             if response_line:                
                 json_response = json.loads(response_line)
 
@@ -222,8 +222,10 @@ def main():
     ta = TranslationAnswer()
     ta.get_stream()
     while True:
-        if (time.perf_counter() - last_response_time) > 30:
-            logger.info("About to disconnect.")
+        temp = (time.time() - last_response_time)
+        print(temp)
+        if temp > 30:
+            logger.info("About to disconnect. Reconnecting.")
             ta.get_stream()
 
 if __name__ == "__main__":
