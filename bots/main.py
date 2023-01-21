@@ -221,7 +221,6 @@ class TranslationAnswer(Client):
         response = self.get_stream()
         
         for response_line in response.iter_lines():
-            logger.info("Recieved content or heartbeat.")
             self.last_response_time = time.time()
             if response_line:                
                 json_response = json.loads(response_line)
@@ -260,10 +259,7 @@ def main():
     t_stream = threading.Thread(target=ta.translator)
     t_stream.start()
     while True:
-        if ta.last_response_time is not None:
-            passed = time.time() - ta.last_response_time
-            logger.info(passed)
-        if (ta.last_response_time is not None) and (passed > 30):
+        if (ta.last_response_time is not None) and (time.time() - ta.last_response_time > 30):
             logger.info("About to disconnect.")
             t_stream.join()
             logger.info("Disconnected.")
