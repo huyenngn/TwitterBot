@@ -100,6 +100,21 @@ class Client:
         
         logger.info(f"Retweeted. Response code: {response.status_code}")
 
+    def get_tweet(self, tweet_id):
+        response = self.api.get(
+            "https://api.twitter.com/2/tweets", 
+            params= {
+            "ids": tweet_id,
+            "expansions":"author_id",
+            "tweet.fields":"referenced_tweets"
+            }
+        )
+
+        if response.status_code != 200:
+            raise Exception(
+                "Request returned an error: {} {}".format(response.status_code, response.text)
+            )
+
     def create_tweet(self, **kwargs):
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
             raise Exception("nothing to tweet...")
@@ -136,7 +151,7 @@ class Client:
 
         logger.info(f"Got rules. Response code: {response.status_code}")
 
-        print(json.dumps(response.json()))
+        logger.info(json.dumps(response.json()))
         return response.json()
 
     def delete_all_rules(self):
@@ -158,7 +173,7 @@ class Client:
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
             
-        print(json.dumps(response.json()))
+        logger.info(json.dumps(response.json()))
 
     def set_rules(self):
         payload = {"add": stream_rules}
@@ -173,8 +188,27 @@ class Client:
 
         logger.info(f"Set rules. Response code: {response.status_code}")
 
-        print(json.dumps(response.json()))
+        logger.info(json.dumps(response.json()))
 
+    def get_stream(self):
+        self.delete_all_rules()
+        self.set_rules()
+        response = requests.get(
+            "https://api.twitter.com/2/tweets/search/stream",
+            params={"expansions":"author_id,attachments.media_keys",
+                    "tweet.fields":"referenced_tweets",
+                    "media.fields":"url"},
+            auth=bearer_oauth,
+            stream=True
+        )
+
+        logger.info(f"Filtered stream. Response code: {response.status_code}")
+
+        if response.status_code != 200:
+            backoff(response)
+            self.get_stream()
+        
+        return response
 
 class TranslationAnswer(Client):
     def __init__(self):
@@ -183,22 +217,8 @@ class TranslationAnswer(Client):
 
         super(TranslationAnswer, self).__init__()
 
-    def get_stream(self):
-        self.delete_all_rules()
-        self.set_rules()
-        response = requests.get(
-            "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions":"author_id",
-                    "tweet.fields":"referenced_tweets"},
-            auth=bearer_oauth,
-            stream=True
-        )
-
-        logger.info(f"Filtered stream. Response code: {response.status_code}")
-        print(response.headers)
-        if response.status_code != 200:
-            backoff(response)
-            self.get_stream()
+    def translator(self):
+        response = self.get_stream()
         
         for response_line in response.iter_lines():
             logger.info("Recieved content or heartbeat.")
@@ -212,32 +232,45 @@ class TranslationAnswer(Client):
                     translation = BECKY_EMOJI + ": "
                 else:
                     translation = STRANGER_EMOJI + ": "
-                translation += self.trans.translate(json_response["data"]["text"], src='th', dst='en').text
+                has_quote = ("referenced_tweets" in json_response["data"]) and (json_response["data"]["referenced_tweets"][0]["type"] == "quoted")
+                has_media = "media" in json_response["includes"]
+                is_reply = ("referenced_tweets" in json_response["data"]) and (json_response["data"]["referenced_tweets"][0]["type"] == "replied_to")
+                # TODO: remove mention when its a reply remove tweet_links and media_links at end of tweet
+                text = json_response["data"]["text"]
+
+                if has_quote:
+                    text = text.rsplit(' ', 1)[0]
+                if has_media:
+                    text = text.rsplit(' ', 1)[0]
+                if is_reply:
+                    text = (text.split('@', 1)[1]).split(' ', 1)[1]
+
+                translation += self.trans.translate(text, src='th', dst='en').text
 
                 tweet_id = json_response["data"]["id"]
 
                 self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
                 self.like(tweet_id)
-                self.retweet(tweet_id)
+                self.create_tweet(text=translation, quote_tweet_id=tweet_id)
 
-                print(json.dumps(json_response, indent=4, sort_keys=True))
+                logger.info(json.dumps(json_response, indent=4, sort_keys=True))
             
 def main():
     ta = TranslationAnswer()
-    t_stream = threading.Thread(target=ta.get_stream)
+    t_stream = threading.Thread(target=ta.translator)
     t_stream.start()
     while True:
         if ta.last_response_time is not None:
             passed = time.time() - ta.last_response_time
             logger.info(passed)
-        if (ta.last_response_time is not None) and (passed > 20):
+        if (ta.last_response_time is not None) and (passed > 30):
             logger.info("About to disconnect.")
             t_stream.join()
             logger.info("Disconnected.")
+            ta.last_response_time = None
             t_stream = threading.Thread(target=ta.get_stream)
             t_stream.start()
         time.sleep(10)
     
-
 if __name__ == "__main__":
     main()
