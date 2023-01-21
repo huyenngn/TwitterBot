@@ -22,8 +22,8 @@ if DEBUG:
     ]
 else:
     stream_rules = [
-        {"value": 'to:'+FREEN_TWT+' is:verified', "tag": "freen_reply"},
-        {"value": 'to:'+BECKY_TWT+' is:verified', "tag": "becky_reply"},
+        {"value": 'to:'+FREEN_TWT+' followers_count:50000', "tag": "freen_reply"},
+        {"value": 'to:'+BECKY_TWT+' followers_count:50000', "tag": "becky_reply"},
         {"value": 'from:'+FREEN_TWT+' -is:retweet', "tag": "freen"},
         {"value": 'from:'+BECKY_TWT+' -is:retweet', "tag": "becky"}
     ]
@@ -201,9 +201,8 @@ class Twitter:
         self.set_rules()
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id,attachments.media_keys",
-                    "tweet.fields": "referenced_tweets",
-                    "media.fields": "url"},
+            params={"expansions": "author_id",
+                    "tweet.fields": "referenced_tweets"},
             auth=bearer_oauth,
             stream=True
         )
@@ -213,8 +212,6 @@ class Twitter:
         if response.status_code != 200:
             backoff(response)
             self.get_stream()
-
-        self.last_response_time = time.time()
 
         return response
 
@@ -228,6 +225,7 @@ class Twitter_Interacter(Twitter):
 
     def interact(self):
         response = self.get_stream()
+        self.last_response_time = time.time()
 
         for response_line in response.iter_lines():
             self.last_response_time = time.time()
@@ -245,7 +243,6 @@ class Twitter_Interacter(Twitter):
 
                 has_quote = ("referenced_tweets" in json_response["data"]) and (
                     json_response["data"]["referenced_tweets"][0]["type"] == "quoted")
-                has_media = "media" in json_response["includes"]
                 is_reply = ("referenced_tweets" in json_response["data"]) and (
                     json_response["data"]["referenced_tweets"][0]["type"] == "replied_to")
 
@@ -264,16 +261,7 @@ class Twitter_Interacter(Twitter):
                 self.create_tweet(text=translation,
                                   in_reply_to_tweet_id=tweet_id)
                 self.like(tweet_id)
-
-                if has_media:
-                    temp = translation.split('https://')
-                    for i in range(1, len(temp)):
-                        temp1 = temp[i].split(' ', 1)
-                        temp[i] = temp1[-1] if (len(temp1) > 1) else ""
-                    translation = ''.join(temp)
-
-                if translation != "":
-                    self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+                self.create_tweet(text=translation, quote_tweet_id=tweet_id)
 
 def main():
     ti = Twitter_Interacter()
