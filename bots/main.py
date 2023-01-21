@@ -61,6 +61,7 @@ def backoff(response):
         while (time.time() - saved) < wait_time:
             time.sleep(1)
         wait_time *= 2
+    wait_time = 5
 
 
 class Client:
