@@ -9,23 +9,31 @@ import threading
 
 DEBUG = True
 
-FREEN_TWT = "srchafreen"
-BECKY_TWT = "AngelssBecky"
+twitter_handles = {
+    "freen": "srchafreen",
+    "becky": "AngelssBecky",
+    "nam": "namorntaraaa",
+    "gap": "GAPtheseries"
+}
 
-FREEN_EMOJI = "\ud83d\udc30"
-BECKY_EMOJI = "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f"
-STRANGER_EMOJI = "\ud83d\udc64"
+emojis = {
+    "freen":  "\ud83d\udc30",
+    "becky": "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f",
+    "nam": "\ud83d\udea2",
+    "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
+    "other": "\ud83d\udc64"
+}
+
 
 if DEBUG:
     stream_rules = [
-        {"value": 'from:joohwangblink -is:retweet', "tag": "debug"}
+        {"value": 'from:joohwangblink -is:retweet', "tag": "other"}
     ]
 else:
     stream_rules = [
-        {"value": 'to:'+FREEN_TWT+' followers_count:50000', "tag": "freen_reply"},
-        {"value": 'to:'+BECKY_TWT+' followers_count:50000', "tag": "becky_reply"},
-        {"value": 'from:'+FREEN_TWT+' -is:retweet', "tag": "freen"},
-        {"value": 'from:'+BECKY_TWT+' -is:retweet', "tag": "becky"}
+        {"value": 'from:'+twitter_handles["gap"]+' -is:retweet', "tag": "gap"},
+        {"value": 'from:'+twitter_handles["freen"]+' -is:retweet', "tag": "freen"},
+        {"value": 'from:'+twitter_handles["becky"]+' -is:retweet', "tag": "becky"}
     ]
 
 consumer_key = os.getenv("CONSUMER_KEY")
@@ -44,9 +52,8 @@ def bearer_oauth(r):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+
 WAIT_TIME = 5
-
-
 def backoff(response):
     if (response.status_code >= 400) and (response.status_code < 420):
         logger.error(
@@ -67,7 +74,6 @@ def backoff(response):
         while (time.time() - saved) < WAIT_TIME:
             time.sleep(1)
         WAIT_TIME *= 2
-    WAIT_TIME = 5
 
 
 class Twitter:
@@ -112,14 +118,17 @@ class Twitter:
             "https://api.twitter.com/2/tweets",
             params={
                 "ids": tweet_id,
-                "expansions": "author_id",
-                "tweet.fields": "referenced_tweets"
-            }
+                "expansions": "author_id,attachments.media_keys",
+                "tweet.fields": "referenced_tweets",
+                "media.fields": "url",
+                "user.fields": "username"}
         )
 
         if response.status_code != 200:
             backoff(response)
-            self.get_tweet(tweet_id)
+            return self.get_tweet(tweet_id)
+
+        return response
 
     def create_tweet(self, **kwargs):
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
@@ -153,7 +162,7 @@ class Twitter:
         )
         if response.status_code != 200:
             backoff(response)
-            self.get_rules()
+            return self.get_rules()
 
         logger.info(f"Got rules. Response code: {response.status_code}")
 
@@ -201,8 +210,9 @@ class Twitter:
         self.set_rules()
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id",
-                    "tweet.fields": "referenced_tweets"},
+            params={"expansions": "author_id,attachments.media_keys",
+                    "tweet.fields": "referenced_tweets",
+                    "media.fields": "url"},
             auth=bearer_oauth,
             stream=True
         )
@@ -211,7 +221,7 @@ class Twitter:
 
         if response.status_code != 200:
             backoff(response)
-            self.get_stream()
+            return self.get_stream()
 
         return response
 
@@ -223,59 +233,83 @@ class Twitter_Interacter(Twitter):
 
         super(Twitter_Interacter, self).__init__()
 
-    def interact(self):
-        response = self.get_stream()
-        self.last_response_time = time.time()
+    def translate_tweet(self, data, json_response, tag):
+        is_quote = ("referenced_tweets" in data) and (
+            data["referenced_tweets"][0]["type"] == "quoted")
+        is_reply = ("referenced_tweets" in data) and (
+            data["referenced_tweets"][0]["type"] == "replied_to")
+        has_media = "media" in json_response["includes"]
 
+        text = data["text"]
+
+        if is_quote:
+            text = text.rsplit(' ', 1)[0]
+        if is_reply:
+            reply_number = len(json_response["includes"]["users"]) - 1
+            mentions = text.split('@', reply_number)
+            text = links[-1] if len(mentions) > 1 else ""
+            # for i in range(0, reply_number):
+            #     temp = mentions[i].split(' ', 1)
+            #     mentions[i] = temp[-1] if len(temp) > 1 else ""
+            # text = ''.join(mentions)
+        if has_media:
+            media_number = len(json_response["includes"]["media"])
+            links = text.rsplit('https://', media_number)
+            text = links[0] if len(links) > 1 else ""
+            # for i in range(media_number,0,-1):
+            #     temp = links[i].split(' ', 1)
+            #     links[i] = temp[-1] if len(temp) > 1 else ""
+            # text = ''.join(links)
+        
+        tweet_id = data["id"]
+        if text != "":
+            translation = emojis[tag] + ": "
+            translation += self.trans.translate(text,
+                                                src='th', dst='en').text
+            self.create_tweet(text=translation,
+                                in_reply_to_tweet_id=tweet_id)
+            self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+
+        self.like(tweet_id)
+
+
+    def response_handler(self, response):
         for response_line in response.iter_lines():
             self.last_response_time = time.time()
             if response_line:
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response,
                             indent=4, sort_keys=True))
-                
-                if json_response["matching_rules"][0]["tag"] == "freen":
-                    translation = FREEN_EMOJI + ": "
-                elif json_response["matching_rules"][0]["tag"] == "becky":
-                    translation = BECKY_EMOJI + ": "
-                else:
-                    translation = STRANGER_EMOJI + ": "
 
-                has_quote = ("referenced_tweets" in json_response["data"]) and (
-                    json_response["data"]["referenced_tweets"][0]["type"] == "quoted")
-                is_reply = ("referenced_tweets" in json_response["data"]) and (
-                    json_response["data"]["referenced_tweets"][0]["type"] == "replied_to")
+                tag = json_response["matching_rules"][0]["tag"]
 
-                # TODO: remove mention when its a reply remove tweet_links and media_links at end of tweet
-                text = json_response["data"]["text"]
+                self.translate_tweet(json_response["data"], json_response, tag)
 
-                if is_reply:
-                    text = (text.split('@', 1)[-1]).split(' ', 1)[-1]
-                if has_quote:
-                    text = text.rsplit(' ', 1)[0]
-                translation += self.trans.translate(text,
-                                                    src='th', dst='en').text
+                if "referenced_tweets" in json_response["data"]:
+                    parent = self.get_tweet(json_response["data"]["referenced_tweets"][0]["id"]).json()
+                    print(parent)
+                    username = parent["includes"]["users"][0]["username"]
+                    if username not in twitter_handles.values():
+                        self.translate_tweet(parent["data"][0], parent, "other")
 
-                tweet_id = json_response["data"]["id"]
-
-                self.create_tweet(text=translation,
-                                  in_reply_to_tweet_id=tweet_id)
-                self.like(tweet_id)
-                self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+    def interact(self):
+        response = self.get_stream()
+        self.last_response_time = time.time()
+        t_handler = threading.Thread(target=self.response_handler(response))
+        t_handler.start()
+        while True:
+            if (time.time() - self.last_response_time) > 30:
+                logger.info("About to disconnect.")
+                t_handler.join()
+                logger.info("Disconnected.")
+                t_handler = threading.Thread(target=self.response_handler(response))
+                t_handler.start()
+            time.sleep(10)
 
 def main():
     ti = Twitter_Interacter()
-    t_stream = threading.Thread(target=ti.interact)
-    t_stream.start()
-    while True:
-        if (ti.last_response_time is not None) and ((time.time() - ti.last_response_time) > 30):
-            logger.info("About to disconnect.")
-            t_stream.join()
-            logger.info("Disconnected.")
-            t_stream = threading.Thread(target=ti.get_stream)
-            t_stream.start()
-        time.sleep(10)
-
+    t_interact = threading.Thread(target=ti.interact)
+    t_interact.start()
 
 if __name__ == "__main__":
     main()
