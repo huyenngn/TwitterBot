@@ -10,10 +10,10 @@ import threading
 DEBUG = False
 
 twitter_handles = {
-    "freen": "srchafreen",
-    "becky": "AngelssBecky",
-    "nam": "namorntaraaa",
-    "gap": "GAPtheseries"
+    "srchafreen": "freen",
+    "AngelssBecky": "becky",
+    "namorntaraaa": "nam",
+    "GAPtheseries": "gap"
 }
 
 emojis = {
@@ -31,7 +31,6 @@ if DEBUG:
     ]
 else:
     stream_rules = [
-        {"value": 'from:'+twitter_handles["gap"]+' -is:retweet', "tag": "gap"},
         {"value": 'from:'+twitter_handles["freen"]+' -is:retweet', "tag": "freen"},
         {"value": 'from:'+twitter_handles["becky"]+' -is:retweet', "tag": "becky"}
     ]
@@ -279,9 +278,13 @@ class Twitter_Interacter(Twitter):
                     parent = self.get_tweet(json_response["data"]["referenced_tweets"][0]["id"]).json()
                     print(parent)
                     username = parent["includes"]["users"][0]["username"]
-                    if username not in twitter_handles.values():
-                        temp = self.translate_tweet(parent["data"][0], parent, "other")
-                    translation = (temp + "\n" + translation) if (len(temp) < 280) else (temp[:(length-5)] + "...\n" + translation)
+                    if username not in [twitter_handles["freen"], twitter_handles["becky"]]:
+                        if username in twitter_handles:
+                            tag = twitter_handles[username]
+                        else:
+                            tag = "other"
+                        temp = self.translate_tweet(parent["data"][0], parent, tag)
+                        translation = (temp + "\n" + translation) if (len(temp) < 280) else (temp[:(length-5)] + "...\n" + translation)
 
                 if translation != None:
                     self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
