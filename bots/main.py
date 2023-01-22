@@ -7,13 +7,13 @@ from googletrans import Translator
 import logging
 import threading
 
-DEBUG = False
+DEBUG = True
 
 twitter_handles = {
-    "srchafreen": "freen",
-    "AngelssBecky": "becky",
-    "namorntaraaa": "nam",
-    "GAPtheseries": "gap"
+    "freen": "srchafreen",
+    "becky": "AngelssBecky",
+    "nam": "namorntaraaa",
+    "gap": "GAPtheseries"
 }
 
 emojis = {
@@ -278,9 +278,9 @@ class Twitter_Interacter(Twitter):
                     parent = self.get_tweet(json_response["data"]["referenced_tweets"][0]["id"]).json()
                     print(parent)
                     username = parent["includes"]["users"][0]["username"]
-                    if username not in [twitter_handles["freen"], twitter_handles["becky"]]:
-                        if username in twitter_handles:
-                            tag = twitter_handles[username]
+                    if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
+                        if username in twitter_handles.values():
+                            tag = list(twitter_handles.keys())[list(twitter_handles.values()).index(username)]
                         else:
                             tag = "other"
                         temp = self.translate_tweet(parent["data"][0], parent, tag)
@@ -291,7 +291,6 @@ class Twitter_Interacter(Twitter):
                     self.create_tweet(text=translation, quote_tweet_id=tweet_id)
                 else:
                     self.retweet(tweet_id)
-        
 
     def interact(self):
         response = self.get_stream()
