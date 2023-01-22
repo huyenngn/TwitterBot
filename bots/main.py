@@ -7,7 +7,7 @@ from googletrans import Translator
 import logging
 import threading
 
-DEBUG = True
+DEBUG = False
 
 twitter_handles = {
     "freen": "srchafreen",
@@ -246,32 +246,19 @@ class Twitter_Interacter(Twitter):
             text = text.rsplit(' ', 1)[0]
         if is_reply:
             reply_number = len(json_response["includes"]["users"]) - 1
-            mentions = text.split('@', reply_number)
-            text = links[-1] if len(mentions) > 1 else ""
-            # for i in range(0, reply_number):
-            #     temp = mentions[i].split(' ', 1)
-            #     mentions[i] = temp[-1] if len(temp) > 1 else ""
-            # text = ''.join(mentions)
+            mentions = text.split('@', reply_number)[-1].split(' ', 1)
+            text = mentions[-1] if len(mentions) > 1 else ""
         if has_media:
             media_number = len(json_response["includes"]["media"])
             links = text.rsplit('https://', media_number)
             text = links[0] if len(links) > 1 else ""
-            # for i in range(media_number,0,-1):
-            #     temp = links[i].split(' ', 1)
-            #     links[i] = temp[-1] if len(temp) > 1 else ""
-            # text = ''.join(links)
         
-        tweet_id = data["id"]
-        if text != "":
-            translation = emojis[tag] + ": "
-            translation += self.trans.translate(text,
-                                                src='th', dst='en').text
-            self.create_tweet(text=translation,
-                                in_reply_to_tweet_id=tweet_id)
-            self.create_tweet(text=translation, quote_tweet_id=tweet_id)
-
-        self.like(tweet_id)
-
+        if text == "":
+            return None
+        
+        translation = emojis[tag] + ": "
+        translation += self.trans.translate(text, src='th', dst='en').text
+        return translation
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -280,17 +267,28 @@ class Twitter_Interacter(Twitter):
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response,
                             indent=4, sort_keys=True))
+                
+                tweet_id = json_response["data"]["id"]
+                self.like(tweet_id)
 
                 tag = json_response["matching_rules"][0]["tag"]
 
-                self.translate_tweet(json_response["data"], json_response, tag)
-
+                translation = self.translate_tweet(json_response["data"], json_response, tag)
+                length = 280 - len(translation)
                 if "referenced_tweets" in json_response["data"]:
                     parent = self.get_tweet(json_response["data"]["referenced_tweets"][0]["id"]).json()
                     print(parent)
                     username = parent["includes"]["users"][0]["username"]
                     if username not in twitter_handles.values():
-                        self.translate_tweet(parent["data"][0], parent, "other")
+                        temp = self.translate_tweet(parent["data"][0], parent, "other")
+                    translation = (temp + "\n" + translation) if (len(temp) < 280) else (temp[:(length-5)] + "...\n" + translation)
+
+                if translation != None:
+                    self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
+                    self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+                else:
+                    self.retweet(tweet_id)
+        
 
     def interact(self):
         response = self.get_stream()
