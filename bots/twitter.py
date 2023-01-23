@@ -1,14 +1,28 @@
-from googletrans import Translator
 import threading
+from translate import Translator
 from config import *
 
+twitter_handles = {
+    "freen": "srchafreen",
+    "becky": "AngelssBecky",
+    "nam": "namorntaraaa",
+    "gap": "GAPtheseries"
+}
 
-class Twitter_Interacter(Twitter):
-    def __init__(self):
+emojis = {
+    "freen":  "\ud83d\udc30",
+    "becky": "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f",
+    "nam": "\ud83d\udea2",
+    "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
+    "other": "\ud83d\udc64"
+}
+
+class Twitter_Interacter(API):
+    def __init__(self, api):
         self.trans = Translator()
         self.last_response_time = None
 
-        super(Twitter_Interacter, self).__init__()
+        super(Twitter_Interacter, self).__init__(api)
 
     def translate_tweet(self, data, json_response, tag):
         is_quote = ("referenced_tweets" in data) and (
@@ -34,7 +48,7 @@ class Twitter_Interacter(Twitter):
             return None
         
         translation = emojis[tag] + ": "
-        translation += self.trans.translate(text, src='th', dst='en').text
+        translation += self.trans.translate_tweet(text)
         return translation
 
     def response_handler(self, response):
@@ -49,6 +63,12 @@ class Twitter_Interacter(Twitter):
                 self.like(tweet_id)
 
                 tag = json_response["matching_rules"][0]["tag"]
+
+                medias = []
+                for m in json_response["includes"]["media"]:
+                    img = self.trans.translate_image(url=m["url"])
+                    id = self.post_media(img)
+                    medias.append(id)
 
                 translation = self.translate_tweet(json_response["data"], json_response, tag)
                 length = 280 - len(translation)
@@ -65,8 +85,8 @@ class Twitter_Interacter(Twitter):
                         translation = (temp + "\n" + translation) if (len(temp) < 280) else (temp[:(length-5)] + "...\n" + translation)
 
                 if translation != None:
-                    self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
-                    self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+                    self.create_tweet(text=translation, media_ids = medias, in_reply_to_tweet_id=tweet_id)
+                    self.create_tweet(text=translation, media_ids = medias, quote_tweet_id=tweet_id)
                 else:
                     self.retweet(tweet_id)
 
@@ -85,7 +105,13 @@ class Twitter_Interacter(Twitter):
             time.sleep(10)
 
 def main():
-    ti = Twitter_Interacter()
+    api = OAuth1Session(
+            consumer_key,
+            client_secret=consumer_secret,
+            resource_owner_key=access_token,
+            resource_owner_secret=access_token_secret,
+        )
+    ti = Twitter_Interacter(api)
     t_interact = threading.Thread(target=ti.interact)
     t_interact.start()
 

@@ -4,24 +4,9 @@ import requests
 import time
 from requests_oauthlib import OAuth1Session
 import json
+import base64
 
 DEBUG = False
-
-twitter_handles = {
-    "freen": "srchafreen",
-    "becky": "AngelssBecky",
-    "nam": "namorntaraaa",
-    "gap": "GAPtheseries"
-}
-
-emojis = {
-    "freen":  "\ud83d\udc30",
-    "becky": "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f",
-    "nam": "\ud83d\udea2",
-    "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
-    "other": "\ud83d\udc64"
-}
-
 
 if DEBUG:
     stream_rules = [
@@ -29,8 +14,8 @@ if DEBUG:
     ]
 else:
     stream_rules = [
-        {"value": 'from:'+twitter_handles["freen"]+' -is:retweet', "tag": "freen"},
-        {"value": 'from:'+twitter_handles["becky"]+' -is:retweet', "tag": "becky"}
+        {"value": 'from:srchafreen -is:retweet', "tag": "freen"},
+        {"value": 'from:AngelssBecky -is:retweet', "tag": "becky"}
     ]
 
 consumer_key = os.getenv("CONSUMER_KEY")
@@ -73,14 +58,9 @@ def backoff(response):
         WAIT_TIME *= 2
 
 
-class Twitter:
-    def __init__(self):
-        self.api = OAuth1Session(
-            consumer_key,
-            client_secret=consumer_secret,
-            resource_owner_key=access_token,
-            resource_owner_secret=access_token_secret,
-        )
+class API:
+    def __init__(self, api):
+        self.api = api
         self.id = "1601180254931980288"
 
         logger.info("Set up client.")
@@ -124,6 +104,18 @@ class Twitter:
         if response.status_code != 200:
             backoff(response)
             return self.get_tweet(tweet_id)
+
+        return response
+    
+    def post_media(self, media):
+        encoded_string = base64.b64encode(media.read())
+
+        payload = {"media_data": encoded_string}
+
+        response = self.api.post(
+            "https://api.twitter.com/2/tweets",
+            json=payload,
+        )
 
         return response
 
