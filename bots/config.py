@@ -6,7 +6,7 @@ from requests_oauthlib import OAuth1Session
 import json
 import base64
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     stream_rules = [
@@ -18,10 +18,7 @@ else:
         {"value": 'from:AngelssBecky -is:retweet', "tag": "becky"}
     ]
 
-consumer_key = os.getenv("CONSUMER_KEY")
-consumer_secret = os.getenv("CONSUMER_SECRET")
-access_token = os.getenv("ACCESS_TOKEN")
-access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+
 bearer_token = os.getenv("BEARER_TOKEN")
 
 
@@ -113,7 +110,7 @@ class API:
         payload = {"media_data": encoded_string}
 
         response = self.api.post(
-            "https://api.twitter.com/2/tweets",
+            "https://upload.twitter.com/1.1/media/upload.json",
             json=payload,
         )
 

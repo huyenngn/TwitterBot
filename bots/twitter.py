@@ -1,6 +1,10 @@
 import threading
+import json
+import time
+import os
+from requests_oauthlib import OAuth1Session
 from translate import Translator
-from config import *
+from config import API, logger
 
 twitter_handles = {
     "freen": "srchafreen",
@@ -16,6 +20,11 @@ emojis = {
     "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
     "other": "\ud83d\udc64"
 }
+
+consumer_key = os.getenv("CONSUMER_KEY")
+consumer_secret = os.getenv("CONSUMER_SECRET")
+access_token = os.getenv("ACCESS_TOKEN")
+access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 
 class Twitter_Interacter(API):
     def __init__(self, api):
@@ -48,8 +57,20 @@ class Twitter_Interacter(API):
             return None
         
         translation = emojis[tag] + ": "
-        translation += self.trans.translate_tweet(text)
+        translation += self.trans.translate_text(text)
         return translation
+    
+    def do_routine(self, translation, tweet_id):
+        length = 280 - len(translation)
+        if length < 0:
+            length = 0 - length
+            translation = translation[:(length-5)] + "...\n"
+
+        if translation != None:
+            self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
+            self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+        else:
+            self.retweet(tweet_id)
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -64,16 +85,18 @@ class Twitter_Interacter(API):
 
                 tag = json_response["matching_rules"][0]["tag"]
 
-                medias = []
-                for m in json_response["includes"]["media"]:
-                    img = self.trans.translate_image(url=m["url"])
-                    id = self.post_media(img)
-                    medias.append(id)
-
                 translation = self.translate_tweet(json_response["data"], json_response, tag)
-                length = 280 - len(translation)
+
+                # for m in json_response["includes"]["media"]:
+                    # translation = translation + "\n image: " + self.trans.translate_image(url=m["url"])
+                    # id = self.post_media(img)
+                    # medias.append(id)
+
+                self.do_routine(translation, tweet_id)
+
                 if "referenced_tweets" in json_response["data"]:
-                    parent = self.get_tweet(json_response["data"]["referenced_tweets"][0]["id"]).json()
+                    tweet_id = json_response["data"]["referenced_tweets"][0]["id"]
+                    parent = self.get_tweet(tweet_id).json()
                     print(parent)
                     username = parent["includes"]["users"][0]["username"]
                     if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
@@ -81,14 +104,8 @@ class Twitter_Interacter(API):
                             tag = list(twitter_handles.keys())[list(twitter_handles.values()).index(username)]
                         else:
                             tag = "other"
-                        temp = self.translate_tweet(parent["data"][0], parent, tag)
-                        translation = (temp + "\n" + translation) if (len(temp) < 280) else (temp[:(length-5)] + "...\n" + translation)
-
-                if translation != None:
-                    self.create_tweet(text=translation, media_ids = medias, in_reply_to_tweet_id=tweet_id)
-                    self.create_tweet(text=translation, media_ids = medias, quote_tweet_id=tweet_id)
-                else:
-                    self.retweet(tweet_id)
+                        translation = self.translate_tweet(parent["data"][0], parent, tag)
+                        self.do_routine(translation, tweet_id)
 
     def interact(self):
         response = self.get_stream()
