@@ -116,9 +116,6 @@ class API:
         return response.json()
 
     def create_tweet(self, **kwargs):
-        if "text" in kwargs:
-            kwargs["text"] = kwargs["text"].replace("@FreenBeckyBot","")
-
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
             raise Exception("nothing to tweet...")
         

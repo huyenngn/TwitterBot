@@ -1,7 +1,6 @@
 import threading
 import json
 import time
-import os
 from requests_oauthlib import OAuth1Session
 from translate import Translator
 from config import API, logger
@@ -10,20 +9,22 @@ twitter_handles = {
     "freen": "srchafreen",
     "becky": "AngelssBecky",
     "nam": "namorntaraaa",
-    "gap": "GAPtheseries"
+    "gap": "GAPtheseries",
+    "bot": "FreenBeckyBot"
 }
 
 emojis = {
     "freen":  "\ud83d\udc30",
-    "becky": "\ud83e\uddda\ud83c\udffb\u200d\u2640\ufe0f",
+    "becky": "\ud83e\udda6",
     "nam": "\ud83d\udea2",
     "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
-    "other": "\ud83d\udc64"
+    "other": "\ud83d\udc64",
+    "bot": "\ud83e\udd16"
 }
 
 stream_rules = [
     # {"value": 'from:joohwangblink -is:retweet', "tag": "freenbeck"},
-    {"value": '@FreenBeckyBot -from:FreenBeckyBot is:reply -is:retweet', "tag": "mention"},
+    {"value": '@FreenBeckyBot -from:FreenBeckyBot -to:FreenBeckyBot is:reply -is:retweet', "tag": "mention"},
     # {"value": 'retweets_of:FreenBeckyBot OR to:FreenBeckyBot', "tag": "interact"},
     {"value": '(from:'+twitter_handles["freen"]+' OR from:'+twitter_handles["becky"]+') -is:retweet', "tag": "freenbeck"},
 ]
@@ -98,7 +99,11 @@ class Twitter_Interacter(API):
                     # get parent and translate parent reply to child#
                     tweet_id = json_response["data"]["id"]
                     parent_id = json_response["data"]["referenced_tweets"][0]["id"]
-                    if parent_id != self.id:
+                    mentioned = False
+                    for user in json_response["includes"]["users"]:
+                        if self.id == user["id"]:
+                            mentioned = True
+                    if not mentioned:
                         parent = self.get_tweet(parent_id)
                         new_tweet = self.translate_tweet(parent, tweet_id)
                 # elif tag == "interact":
