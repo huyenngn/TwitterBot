@@ -198,7 +198,7 @@ class API:
         self.set_rules(stream_rules)
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id,attachments.media_keys",
+            params={"expansions": "author_id,attachments.media_keys,entities.mentions.username",
                     "tweet.fields": "referenced_tweets",
                     "media.fields": "url",
                     "user.fields": "username"},

@@ -99,12 +99,12 @@ class Twitter_Interacter(API):
                     # get parent and translate parent reply to child#
                     tweet_id = json_response["data"]["id"]
                     parent_id = json_response["data"]["referenced_tweets"][0]["id"]
+                    parent = self.get_tweet(parent_id)
                     mentioned = False
-                    for user in json_response["includes"]["users"]:
+                    for user in parent["includes"]["users"]:
                         if self.id == user["id"]:
                             mentioned = True
                     if not mentioned:
-                        parent = self.get_tweet(parent_id)
                         new_tweet = self.translate_tweet(parent, tweet_id)
                 # elif tag == "interact":
                 #     tweet_id = json_response["data"]["id"]
