@@ -65,17 +65,23 @@ class Twitter_Interacter(API):
         translation += self.trans.translate_text(text)
 
         reply_id = tweet_id
+        is_thread = False
         while 240 < len(translation):
             temp = translation[:237] + "..."
             new_tweet = self.create_tweet(text=temp, in_reply_to_tweet_id=reply_id)
+            if not is_thread:
+                result = new_tweet
+                is_thread = True
             print("meow2")
             reply_id = new_tweet["data"]["id"]
             translation = "..." + translation[237:]
 
         new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+        if not is_thread:
+            result = new_tweet
         print("meow3")
 
-        return new_tweet
+        return result
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -89,11 +95,12 @@ class Twitter_Interacter(API):
 
                 if tag == "mention":
                     print("meow1")
-                    # get parent and translate parent reply to child
+                    # get parent and translate parent reply to child#
                     tweet_id = json_response["data"]["id"]
                     parent_id = json_response["data"]["referenced_tweets"][0]["id"]
                     parent = self.get_tweet(parent_id)
-                    new_tweet = self.translate_tweet(parent, tweet_id)
+                    if (parent_id != self.id) and ("@FreenBeckyBot" in parent["data"]["text"]):
+                        new_tweet = self.translate_tweet(parent, tweet_id)
                 # elif tag == "interact":
                 #     tweet_id = json_response["data"]["id"]
                 #     self.like(tweet_id)
