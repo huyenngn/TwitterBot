@@ -100,6 +100,8 @@ class Twitter_Interacter(API):
                     tweet_id = json_response["data"]["id"]
                     parent_id = json_response["data"]["referenced_tweets"][0]["id"]
                     parent = self.get_tweet(parent_id)
+                    logger.info(json.dumps(parent,
+                            indent=4, sort_keys=True))
                     mentioned = False
                     for user in parent["includes"]["users"]:
                         if self.id == user["id"]:

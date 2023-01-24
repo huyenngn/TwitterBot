@@ -91,8 +91,8 @@ class API:
         response = self.api.get(
             "https://api.twitter.com/2/tweets/{}".format(tweet_id),
             params={
-                "expansions": "author_id,attachments.media_keys",
-                "tweet.fields": "referenced_tweets",
+                "expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                "tweet.fields": "referenced_tweets,entities",
                 "media.fields": "url",
                 "user.fields": "username"}
         )
