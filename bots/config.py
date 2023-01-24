@@ -122,10 +122,9 @@ class API:
         payload = {}
         reply = ["in_reply_to_tweet_id"]
         media = ["media_ids"]
-        payload["reply"] = {"exclude_reply_user_ids": [self.id]}
         for key, value in kwargs.items():
             if key in reply:
-                payload["reply"].update({key: value})
+                payload["reply"] = {key: value}
             elif key in media:
                 payload["media"] = {key: value}
             else:
