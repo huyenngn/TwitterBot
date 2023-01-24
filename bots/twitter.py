@@ -21,26 +21,28 @@ emojis = {
     "other": "\ud83d\udc64"
 }
 
-consumer_key = os.getenv("CONSUMER_KEY")
-consumer_secret = os.getenv("CONSUMER_SECRET")
-access_token = os.getenv("ACCESS_TOKEN")
-access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+stream_rules = [
+    # {"value": 'from:joohwangblink -is:retweet', "tag": "freenbeck"},
+    {"value": '@FreenBeckyBot -from:FreenBeckyBot is:reply -is:retweet', "tag": "mention"},
+    # {"value": 'retweets_of:FreenBeckyBot OR to:FreenBeckyBot', "tag": "interact"},
+    {"value": '(from:'+twitter_handles["freen"]+' OR from:'+twitter_handles["becky"]+') -is:retweet', "tag": "freenbeck"},
+]
 
 class Twitter_Interacter(API):
-    def __init__(self, api):
+    def __init__(self):
         self.trans = Translator()
         self.last_response_time = None
 
-        super(Twitter_Interacter, self).__init__(api)
+        super(Twitter_Interacter, self).__init__()
 
-    def translate_tweet(self, data, json_response, tag):
-        is_quote = ("referenced_tweets" in data) and (
-            data["referenced_tweets"][0]["type"] == "quoted")
-        is_reply = ("referenced_tweets" in data) and (
-            data["referenced_tweets"][0]["type"] == "replied_to")
+    def translate_tweet(self, json_response, tweet_id):
+        is_quote = ("referenced_tweets" in json_response["data"]) and (
+            json_response["data"]["referenced_tweets"][0]["type"] == "quoted")
+        is_reply = ("referenced_tweets" in json_response["data"]) and (
+            json_response["data"]["referenced_tweets"][0]["type"] == "replied_to")
         has_media = "media" in json_response["includes"]
 
-        text = data["text"]
+        text = json_response["data"]["text"]
 
         if is_quote:
             text = text.rsplit(' ', 1)[0]
@@ -48,29 +50,32 @@ class Twitter_Interacter(API):
             reply_number = len(json_response["includes"]["users"]) - 1
             mentions = text.split('@', reply_number)[-1].split(' ', 1)
             text = mentions[-1] if len(mentions) > 1 else ""
-        if has_media:
+        if has_media and text != "":
             media_number = len(json_response["includes"]["media"])
             links = text.rsplit('https://', media_number)
-            text = links[0] if len(links) > 1 else ""
-        
-        if text == "":
-            return None
-        
-        translation = emojis[tag] + ": "
-        translation += self.trans.translate_text(text)
-        return translation
-    
-    def do_routine(self, translation, tweet_id):
-        length = 280 - len(translation)
-        if length < 0:
-            length = 0 - length
-            translation = translation[:(length-5)] + "...\n"
+            text = links[0] if len(links) > 1 else text
 
-        if translation != None:
-            self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
-            self.create_tweet(text=translation, quote_tweet_id=tweet_id)
+        username = json_response["includes"]["users"][0]["username"]
+        if username in twitter_handles.values():
+            emoji = list(twitter_handles.keys())[list(twitter_handles.values()).index(username)]
         else:
-            self.retweet(tweet_id)
+            emoji = "other"
+        
+        translation = emojis[emoji] + ": "
+        translation += self.trans.translate_text(text)
+
+        reply_id = tweet_id
+        while 240 < len(translation):
+            temp = translation[:237] + "..."
+            new_tweet = self.create_tweet(text=temp, in_reply_to_tweet_id=reply_id)
+            print("meow2")
+            reply_id = new_tweet["data"]["id"]
+            translation = "..." + translation[237:]
+
+        new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+        print("meow3")
+
+        return new_tweet
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -79,36 +84,49 @@ class Twitter_Interacter(API):
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response,
                             indent=4, sort_keys=True))
-                
-                tweet_id = json_response["data"]["id"]
-                self.like(tweet_id)
 
                 tag = json_response["matching_rules"][0]["tag"]
 
-                translation = self.translate_tweet(json_response["data"], json_response, tag)
-
+                if tag == "mention":
+                    print("meow1")
+                    # get parent and translate parent reply to child
+                    tweet_id = json_response["data"]["id"]
+                    parent_id = json_response["data"]["referenced_tweets"][0]["id"]
+                    parent = self.get_tweet(parent_id)
+                    new_tweet = self.translate_tweet(parent, tweet_id)
+                # elif tag == "interact":
+                #     tweet_id = json_response["data"]["id"]
+                #     self.like(tweet_id)
+                elif tag == "freenbeck":
+                    print("meow")
+                    # translate tweet reply to tweet
+                    # if has parent translate parent reply to tweets translation
+                    tweet_id = json_response["data"]["id"]
+                    self.like(tweet_id)
+                    self.retweet(tweet_id)
+                    new_tweet = self.translate_tweet(json_response, tweet_id)
+                    tweet_id = new_tweet["data"]["id"]
+                    self.retweet(tweet_id)
+                    if "referenced_tweets" in json_response["data"]:
+                        print("meow4")
+                        parent_id = json_response["data"]["referenced_tweets"][0]["id"]
+                        parent = self.get_tweet(parent_id)
+                        username = parent["includes"]["users"][0]["username"]
+                        if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
+                            self.retweet(parent_id)
+                            new_tweet = self.translate_tweet(parent, tweet_id)
+                            print("meow5")
+                            tweet_id = new_tweet["data"]["id"]
+                            self.retweet(tweet_id)
+                else:
+                    pass
                 # for m in json_response["includes"]["media"]:
                     # translation = translation + "\n image: " + self.trans.translate_image(url=m["url"])
                     # id = self.post_media(img)
                     # medias.append(id)
 
-                self.do_routine(translation, tweet_id)
-
-                if "referenced_tweets" in json_response["data"]:
-                    tweet_id = json_response["data"]["referenced_tweets"][0]["id"]
-                    parent = self.get_tweet(tweet_id).json()
-                    print(parent)
-                    username = parent["includes"]["users"][0]["username"]
-                    if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
-                        if username in twitter_handles.values():
-                            tag = list(twitter_handles.keys())[list(twitter_handles.values()).index(username)]
-                        else:
-                            tag = "other"
-                        translation = self.translate_tweet(parent["data"][0], parent, tag)
-                        self.do_routine(translation, tweet_id)
-
     def interact(self):
-        response = self.get_stream()
+        response = self.get_stream(stream_rules)
         self.last_response_time = time.time()
         t_handler = threading.Thread(target=self.response_handler(response))
         t_handler.start()
@@ -122,13 +140,8 @@ class Twitter_Interacter(API):
             time.sleep(10)
 
 def main():
-    api = OAuth1Session(
-            consumer_key,
-            client_secret=consumer_secret,
-            resource_owner_key=access_token,
-            resource_owner_secret=access_token_secret,
-        )
-    ti = Twitter_Interacter(api)
+    ti = Twitter_Interacter()
+    api = ti.get_api()
     t_interact = threading.Thread(target=ti.interact)
     t_interact.start()
 

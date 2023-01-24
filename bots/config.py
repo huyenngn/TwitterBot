@@ -6,21 +6,11 @@ from requests_oauthlib import OAuth1Session
 import json
 import base64
 
-DEBUG = True
-
-if DEBUG:
-    stream_rules = [
-        {"value": 'from:joohwangblink -is:retweet', "tag": "other"}
-    ]
-else:
-    stream_rules = [
-        {"value": 'from:srchafreen -is:retweet', "tag": "freen"},
-        {"value": 'from:AngelssBecky -is:retweet', "tag": "becky"}
-    ]
-
-
+consumer_key = os.getenv("CONSUMER_KEY")
+consumer_secret = os.getenv("CONSUMER_SECRET")
+access_token = os.getenv("ACCESS_TOKEN")
+access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
-
 
 def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
@@ -32,35 +22,45 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
-WAIT_TIME = 5
-def backoff(response):
-    if (response.status_code >= 400) and (response.status_code < 420):
-        logger.error(
-            f"Request returned an error: {response.status_code} {response.text}.")
-        raise Exception("Exiting.")
-    elif (response.status_code >= 420) and (response.status_code <= 429):
-        limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
-        logger.error(
-            f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
-        saved = time.time()
-        while (time.time() - saved) < limit:
-            time.sleep(1)
-    else:
-        WAIT_TIME = min(WAIT_TIME, 320)
-        logger.error(
-            f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {WAIT_TIME}.")
-        saved = time.time()
-        while (time.time() - saved) < WAIT_TIME:
-            time.sleep(1)
-        WAIT_TIME *= 2
-
-
 class API:
-    def __init__(self, api):
-        self.api = api
+    def __init__(self):
+        self.api = None
         self.id = "1601180254931980288"
+        self.wait_time = 5
 
         logger.info("Set up client.")
+    
+    def get_api(self):
+        if self.api == None:
+            self.api = OAuth1Session(
+            consumer_key,
+            client_secret=consumer_secret,
+            resource_owner_key=access_token,
+            resource_owner_secret=access_token_secret,
+            )
+
+        return self.api
+
+    def error_handler(self, response):
+        if (response.status_code >= 400) and (response.status_code < 420):
+            logger.error(
+                f"Request returned an error: {response.status_code} {response.text}.")
+            raise Exception("Exiting.")
+        elif (response.status_code >= 420) and (response.status_code <= 429):
+            limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
+            logger.error(
+                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+            saved = time.time()
+            while (time.time() - saved) < limit:
+                time.sleep(1)
+        else:
+            self.wait_time = min(self.wait_time, 320)
+            logger.error(
+                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}.")
+            saved = time.time()
+            while (time.time() - saved) < self.wait_time:
+                time.sleep(1)
+            self.wait_time *= 2
 
     def like(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -70,7 +70,7 @@ class API:
         )
 
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             self.like(tweet_id)
 
         logger.info(f"Liked. Response code: {response.status_code}")
@@ -82,16 +82,15 @@ class API:
         )
 
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             self.retweet(tweet_id)
 
         logger.info(f"Retweeted. Response code: {response.status_code}")
 
     def get_tweet(self, tweet_id):
         response = self.api.get(
-            "https://api.twitter.com/2/tweets",
+            "https://api.twitter.com/2/tweets/{}".format(tweet_id),
             params={
-                "ids": tweet_id,
                 "expansions": "author_id,attachments.media_keys",
                 "tweet.fields": "referenced_tweets",
                 "media.fields": "url",
@@ -99,10 +98,10 @@ class API:
         )
 
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             return self.get_tweet(tweet_id)
 
-        return response
+        return response.json()
     
     def post_media(self, media):
         encoded_string = base64.b64encode(media.read())
@@ -114,7 +113,7 @@ class API:
             json=payload,
         )
 
-        return response
+        return response.json()
 
     def create_tweet(self, **kwargs):
         if ('text' not in kwargs) and ('media_ids' not in kwargs):
@@ -123,9 +122,10 @@ class API:
         payload = {}
         reply = ["in_reply_to_tweet_id"]
         media = ["media_ids"]
+        payload["reply"] = {"exclude_reply_user_ids": [self.id]}
         for key, value in kwargs.items():
             if key in reply:
-                payload["reply"] = {key: value}
+                payload["reply"].update({key: value})
             elif key in media:
                 payload["media"] = {key: value}
             else:
@@ -137,17 +137,19 @@ class API:
         )
 
         if response.status_code != 201:
-            backoff(response)
+            self.error_handler(response)
             self.create_tweet(kwargs)
 
         logger.info(f"Tweeted. Response code: {response.status_code}")
+
+        return response.json()
 
     def get_rules(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
         )
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             return self.get_rules()
 
         logger.info(f"Got rules. Response code: {response.status_code}")
@@ -169,14 +171,14 @@ class API:
             json=payload
         )
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             self.delete_all_rules()
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
 
         logger.info(json.dumps(response.json()))
 
-    def set_rules(self):
+    def set_rules(self, stream_rules):
         payload = {"add": stream_rules}
         response = requests.post(
             "https://api.twitter.com/2/tweets/search/stream/rules",
@@ -184,21 +186,22 @@ class API:
             json=payload,
         )
         if response.status_code != 201:
-            backoff(response)
+            self.error_handler(response)
             self.set_rules()
 
         logger.info(f"Set rules. Response code: {response.status_code}")
 
         logger.info(json.dumps(response.json()))
 
-    def get_stream(self):
+    def get_stream(self, stream_rules):
         self.delete_all_rules()
-        self.set_rules()
+        self.set_rules(stream_rules)
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
             params={"expansions": "author_id,attachments.media_keys",
                     "tweet.fields": "referenced_tweets",
-                    "media.fields": "url"},
+                    "media.fields": "url",
+                    "user.fields": "username"},
             auth=bearer_oauth,
             stream=True
         )
@@ -206,7 +209,7 @@ class API:
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
         if response.status_code != 200:
-            backoff(response)
+            self.error_handler(response)
             return self.get_stream()
 
         return response
