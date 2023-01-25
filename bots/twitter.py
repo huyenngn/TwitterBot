@@ -127,11 +127,8 @@ class Twitter_Interacter(API):
                         parent = self.get_tweet(parent_id)
                         username = parent["includes"]["users"][0]["username"]
                         if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
-                            self.retweet(parent_id)
                             new_tweet = self.translate_tweet(parent, tweet_id)
                             print("meow5")
-                            tweet_id = new_tweet["data"]["id"]
-                            self.retweet(tweet_id)
                 else:
                     pass
                 # for m in json_response["includes"]["media"]:
