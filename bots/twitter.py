@@ -1,9 +1,9 @@
 import threading
 import json
 import time
-from requests_oauthlib import OAuth1Session
 from translate import Translator
-from config import API, logger
+from config import API
+from helpers import logger
 
 twitter_handles = {
     "freen": "srchafreen",
@@ -63,24 +63,23 @@ class Twitter_Interacter(API):
             emoji = "other"
         
         translation = emojis[emoji] + ": "
-        translation += self.trans.translate_text(text)
+        translation += self.trans.translate_text(text).replace("#", "#.")
 
         reply_id = tweet_id
         is_thread = False
-        while 240 < len(translation):
-            temp = translation[:237] + "..."
+        while 250 < len(translation):
+            parts = translation[247:].split(" ", 1)
+            temp = translation[:247]+ parts[0] + "..."
             new_tweet = self.create_tweet(text=temp, in_reply_to_tweet_id=reply_id)
             if not is_thread:
                 result = new_tweet
                 is_thread = True
-            print("meow2")
             reply_id = new_tweet["data"]["id"]
-            translation = "..." + translation[237:]
+            translation = "..." + parts[-1]
 
         new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
         if not is_thread:
             result = new_tweet
-        print("meow3")
 
         return result
 
@@ -136,25 +135,16 @@ class Twitter_Interacter(API):
                     # id = self.post_media(img)
                     # medias.append(id)
 
-    def interact(self):
+    def start(self):
         response = self.get_stream(stream_rules)
         self.last_response_time = time.time()
         t_handler = threading.Thread(target=self.response_handler(response))
         t_handler.start()
         while True:
+            time.sleep(10)
             if (time.time() - self.last_response_time) > 30:
                 logger.info("About to disconnect.")
                 t_handler.join()
                 logger.info("Disconnected.")
                 t_handler = threading.Thread(target=self.response_handler(response))
                 t_handler.start()
-            time.sleep(10)
-
-def main():
-    ti = Twitter_Interacter()
-    api = ti.get_api()
-    t_interact = threading.Thread(target=ti.interact)
-    t_interact.start()
-
-if __name__ == "__main__":
-    main()

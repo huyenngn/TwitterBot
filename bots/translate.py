@@ -1,19 +1,21 @@
-# import cv2 as cv
-import numpy as np
-import requests
+import io
+import os
+
 from googletrans import Translator as GT
-# import pytesseract as pts
+import cv2 as cv
+
+from google.api_core.exceptions import AlreadyExists
+from google.cloud import translate_v3beta1 as translate
+from google.cloud import vision
+from helpers import url2img
+
+google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+gcloud_id = os.getenv("GCLOUD_PROJECT")
 
 class Translator:
     def __init__(self):
-        self.trans = GT()
-
-    # def url2img(self, url):
-    #     response = requests.get(url)
-    #     img = np.asarray(bytearray(response.content), dtype="uint8")
-    #     img = cv.imdecode(img, cv.IMREAD_COLOR)
-
-    #     return img
+        self.trans = translate.TranslationServiceClient()
+        self.vision = vision.ImageAnnotatorClient()
     
     # def preprocess_image(self, img):
     #     img = cv.medianBlur(img, 1)
@@ -23,6 +25,59 @@ class Translator:
     #     cv.imwrite("threshed.png", res)
 
     #     return res
+
+    def translate_image(self, *, path = None, url = None):
+        if (path is not None):
+            with io.open(path, "rb") as image_file:
+                content = image_file.read()
+            image = vision.Image(content=content)
+        else:
+            image = vision.Image()
+            image.source.image_uri = url
+
+        response = self.vision.text_detection(image=image)
+        text = response.full_text_annotation.text
+        print("Detected text: {}".format(text))
+
+        return self.translate_text(text)
+    
+    def create_glossary(self, glossary_name, glossary_uri):
+
+        # Designates the data center location that you want to use
+        location = "us-central1"
+
+        # Set glossary resource name
+        name = self.trans.glossary_path(gcloud_id, location, glossary_name)
+
+        # Set language codes
+        language_codes_set = translate.Glossary.LanguageCodesSet(
+            language_codes=["en", "th"]
+        )
+
+        gcs_source = translate.GcsSource(input_uri=glossary_uri)
+
+        input_config = translate.GlossaryInputConfig(gcs_source=gcs_source)
+
+        # Set glossary resource information
+        glossary = translate.Glossary(
+            name=name, language_codes_set=language_codes_set, input_config=input_config
+        )
+
+        parent = f"projects/{gcloud_id}/locations/{location}"
+
+        # Create glossary resource
+        # Handle exception for case in which a glossary
+        #  with glossary_name already exists
+        try:
+            operation = self.trans.create_glossary(parent=parent, glossary=glossary)
+            operation.result(timeout=90)
+            print("Created glossary " + glossary_name + ".")
+        except AlreadyExists:
+            print(
+                "The glossary "
+                + glossary_name
+                + " already exists. No new glossary was created."
+            )
     
     # def translate_image(self, *, url = None, image = None):
     #     if url != None:
@@ -61,14 +116,40 @@ class Translator:
 
     #     return text
 
-    def translate_text(self, text):
-        return self.trans.translate(text, src='th', dst='en').text
+    def translate_text(self, text, glossary_name):
+
+        # Designates the data center location that you want to use
+        location = "us-central1"
+
+        glossary = self.trans.glossary_path(gcloud_id, location, glossary_name)
+
+        glossary_config = translate.TranslateTextGlossaryConfig(glossary=glossary)
+
+        parent = f"projects/{gcloud_id}/locations/{location}"
+
+        result = self.trans.translate_text(
+            request={
+                "parent": parent,
+                "contents": [text],
+                "mime_type": "text/plain",  # mime types: text/plain, text/html
+                "source_language_code": "th",
+                "target_language_code": "en",
+                "glossary_config": glossary_config,
+            }
+        )
+
+        # Extract translated text from API response
+        return result.glossary_translations[0].translated_text
+
+    # def translate_text(self, text):
+    #     return self.trans.translate(text, src='th', dst='en').text
 
     
 def main():
     trans = Translator()
-    # img = cv.imread("bots/test2.jpeg", cv.IMREAD_COLOR)
-    # trans.translate_image(image=img)
+
+    # img = cv.imread(, cv.IMREAD_COLOR)
+    trans.translate_image(path="bots/test2.jpeg")
 
 if __name__ == "__main__":
     main()

@@ -1,10 +1,14 @@
-import logging
 import os
 import requests
 import time
 from requests_oauthlib import OAuth1Session
 import json
 import base64
+from helpers import logger
+import threading
+
+from twitter import Twitter_Interacter
+from instagram import Instagram_Reposter
 
 consumer_key = os.getenv("CONSUMER_KEY")
 consumer_secret = os.getenv("CONSUMER_SECRET")
@@ -17,10 +21,26 @@ def bearer_oauth(r):
     r.headers["User-Agent"] = "v2FilteredStreamPython"
     return r
 
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
-
+def error_handler(response, wait_time):
+    if (response.status_code >= 400) and (response.status_code < 420):
+        logger.error(
+            f"Request returned an error: {response.status_code} {response.text}.")
+        raise Exception("Exiting.")
+    elif (response.status_code >= 420) and (response.status_code <= 429):
+        limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
+        logger.error(
+            f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+        saved = time.time()
+        while (time.time() - saved) < limit:
+            time.sleep(1)
+    else:
+        wait_time = min(wait_time, 320)
+        logger.error(
+            f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {wait_time}.")
+        saved = time.time()
+        while (time.time() - saved) < wait_time:
+            time.sleep(1)
+        wait_time *= 2
 
 class API:
     def __init__(self):
@@ -40,27 +60,8 @@ class API:
             )
 
         return self.api
-
-    def error_handler(self, response):
-        if (response.status_code >= 400) and (response.status_code < 420):
-            logger.error(
-                f"Request returned an error: {response.status_code} {response.text}.")
-            raise Exception("Exiting.")
-        elif (response.status_code >= 420) and (response.status_code <= 429):
-            limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
-            logger.error(
-                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
-            saved = time.time()
-            while (time.time() - saved) < limit:
-                time.sleep(1)
-        else:
-            self.wait_time = min(self.wait_time, 320)
-            logger.error(
-                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}.")
-            saved = time.time()
-            while (time.time() - saved) < self.wait_time:
-                time.sleep(1)
-            self.wait_time *= 2
+    def set_api(self, api):
+        self.api = api
 
     def like(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -70,7 +71,7 @@ class API:
         )
 
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             self.like(tweet_id)
 
         logger.info(f"Liked. Response code: {response.status_code}")
@@ -82,7 +83,7 @@ class API:
         )
 
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             self.retweet(tweet_id)
 
         logger.info(f"Retweeted. Response code: {response.status_code}")
@@ -98,7 +99,7 @@ class API:
         )
 
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             return self.get_tweet(tweet_id)
 
         return response.json()
@@ -113,6 +114,10 @@ class API:
             json=payload,
         )
 
+        if response.status_code != 200:
+            self.error_handler(response, self.wait_time)
+            return self.post_media(media)
+        
         return response.json()
 
     def create_tweet(self, **kwargs):
@@ -136,7 +141,7 @@ class API:
         )
 
         if response.status_code != 201:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             self.create_tweet(kwargs)
 
         logger.info(f"Tweeted. Response code: {response.status_code}")
@@ -148,7 +153,7 @@ class API:
             "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
         )
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             return self.get_rules()
 
         logger.info(f"Got rules. Response code: {response.status_code}")
@@ -170,7 +175,7 @@ class API:
             json=payload
         )
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             self.delete_all_rules()
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
@@ -185,7 +190,7 @@ class API:
             json=payload,
         )
         if response.status_code != 201:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             self.set_rules()
 
         logger.info(f"Set rules. Response code: {response.status_code}")
@@ -208,8 +213,20 @@ class API:
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
         if response.status_code != 200:
-            self.error_handler(response)
+            self.error_handler(response, self.wait_time)
             return self.get_stream()
 
         return response
 
+def main():
+    ti = Twitter_Interacter()
+    api = ti.get_api()
+    t_twitter = threading.Thread(target=ti.start)
+    t_twitter.start()
+    ir = Instagram_Reposter()
+    ir.set_api(api)
+    t_insta = threading.Thread(target=ir.start)
+    t_insta.start()
+
+if __name__ == "__main__":
+    main()
