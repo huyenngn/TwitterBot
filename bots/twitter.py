@@ -19,7 +19,8 @@ class Twitter_Interacter(TwitterAPI):
         rule = rule[:-3]+") -is:retweet"
         
         rules = [
-            {"value": "@"+self.username+" -from:"+self.username+" -to:"+self.username+" -is:retweet", "tag": "mention"},
+            {"value": "!translate is:reply -to:"+self.username+" -is:retweet from:"+self.username, "tag": "admin"},
+            {"value": "@"+self.username+" is:reply -from:"+self.username+" -to:"+self.username+" -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
         ]
         return rules
