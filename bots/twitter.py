@@ -6,7 +6,7 @@ from translate import Translator
 from setup import logger, settings
 
 class Twitter_Interacter(TwitterAPI):
-    def __init__(self, api):
+    def __init__(self, api=None):
         self.trans = Translator()
         self.last_response_time = None
         super(Twitter_Interacter, self).__init__(api)
@@ -15,10 +15,10 @@ class Twitter_Interacter(TwitterAPI):
         rule = "("
         for bias in settings["biases"]:
             rule += "from:"+settings["twitter_handles"][bias]+" OR "
-        rule = rule[:-3]+") -is:retweet"
+        rule = rule[:-4]+") -is:retweet"
         
         rules = [
-            {"value": "!translate is:reply -to:"+self.username+" -is:retweet from:"+self.username, "tag": "admin"},
+            {"value": "t35t is:reply -to:"+self.username+" -is:retweet from:"+self.username, "tag": "admin"},
             {"value": "@"+self.username+" is:reply -from:"+self.username+" -to:"+self.username+" -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
         ]
@@ -48,7 +48,6 @@ class Twitter_Interacter(TwitterAPI):
             links = text.rsplit('https://', len(medias))
             text = links[0] if len(links) > 1 else text
 
-        tag = json_response["matching_rules"][0]["tag"]
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
 
@@ -57,7 +56,7 @@ class Twitter_Interacter(TwitterAPI):
         else:
             parent_id = None
 
-        return (tag, text, username, tweet_id, parent_id, image_urls)
+        return (text, username, tweet_id, parent_id, image_urls)
     
     def send_tweet(self, username, text, tweet_id, medias):
         if username in settings["twitter_handles"].values():
@@ -94,11 +93,11 @@ class Twitter_Interacter(TwitterAPI):
                 logger.info(json.dumps(json_response,
                             indent=4, sort_keys=True))
                 
-                tag, text, username, tweet_id, parent_id, image_urls = self.get_data(json_response)
-
+                tag = json_response["matching_rules"][0]["tag"]
                 if tag == "mention":
-
+                    x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
+                    text, username, x, a, z = self.get_data(parent)
                     mentioned = False
                     for user in parent["entities"]["mentions"]:
                         if self.username == user["username"]:
@@ -109,7 +108,7 @@ class Twitter_Interacter(TwitterAPI):
                         self.send_tweet(username, translation, tweet_id, [])
 
                 elif tag == "update":
-                    
+                    text, username, tweet_id, parent_id, image_urls = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
                     translation = self.trans.translate_text(text)
@@ -124,11 +123,32 @@ class Twitter_Interacter(TwitterAPI):
                     self.retweet(tweet_id)
                     if parent_id != None:
                         parent = self.get_tweet(parent_id)
-                        username = parent["includes"]["users"][0]["username"]
+                        text, username, x, y, z = self.get_data(parent)
                         name = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
                         if name not in settings["biases"]:
                             translation = self.trans.translate_text(text)
                             self.send_tweet(username, translation, tweet_id, [])
+
+                elif tag == "admin":
+                    x, y, tweet_id, parent_id, z = self.get_data(json_response)
+                    parent = self.get_tweet(parent_id)
+                    text, username, x, a, image_urls = self.get_data(parent)
+                    print("meow1")
+                    translation = self.trans.translate_text(text)
+                    print("meow2")
+                    translated_images = []
+                    if image_urls:
+                        for url in image_urls:
+                            raw_image = self.trans.translate_image(url)
+                            print("meow4")
+                            media_id = self.create_media(raw_image)["media_id"]
+                            translated_images.append(str(media_id))
+                    print(translated_images)
+                    print("meow3")
+
+                    self.send_tweet(username, translation, tweet_id, translated_images)
+
+
 
     def start(self):
         response = self.get_stream()

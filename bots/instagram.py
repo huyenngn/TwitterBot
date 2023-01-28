@@ -9,7 +9,7 @@ access_token = os.getenv("GCLOUD_PROJECT")
 handles = settings["insta_handles"]
 
 class Instagram_Reposter(TwitterAPI):
-    def __init__(self, api):
+    def __init__(self, api=None):
         self.trans = Translator()
         super().__init__(api=api)
 

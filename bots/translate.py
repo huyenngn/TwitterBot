@@ -46,11 +46,10 @@ class Translator:
                     text = self.translate_text(text)
 
                     draw.text(poly[0],text,(0,0,255),font=self.font)
-        pil_image.show()
         buff = BytesIO()
         pil_image.save(buff, format="JPEG")
         res = base64.b64encode(buff.getvalue())
-        return res
+        return buff.getvalue()
     
     def create_glossary(self, glossary_name, glossary_uri):
         # Set glossary resource name
@@ -91,6 +90,8 @@ class Translator:
         print("Deleted: {}".format(result.name))
     
     def translate_text(self, text):
+        if not text:
+            return ""
 
         glossary = self.trans.glossary_path(gcloud_id, self.location, "glossary")
 

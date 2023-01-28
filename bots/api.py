@@ -28,17 +28,20 @@ class TwitterAPI:
         else:
             self.api = api
 
-        response = self.api.post("https://api.twitter.com/2/users/me")
+        self.wait_time = 5
+    
+        response = self.api.get("https://api.twitter.com/2/users/me")
 
         if response.status_code != 200:
             self.error_handler(response)
             self.get_user()
+        
+        json_response = response.json()
             
-        self.id = response["data"]["id"]
-        self.username = response["data"]["username"]
-        self.wait_time = 5
+        self.id = json_response["data"]["id"]
+        self.username = json_response["data"]["username"]
 
-        logger.info(f"Set up API. Response code: {response.status_code}")
+        logger.info(f"Set user data. Response code: {response.status_code}")
     
     def get_api(self):
         return self.api
@@ -51,7 +54,7 @@ class TwitterAPI:
         )
 
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             self.like(tweet_id)
 
         logger.info(f"Liked. Response code: {response.status_code}")
@@ -63,7 +66,7 @@ class TwitterAPI:
         )
 
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             self.retweet(tweet_id)
 
         logger.info(f"Retweeted. Response code: {response.status_code}")
@@ -79,21 +82,23 @@ class TwitterAPI:
         )
 
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             return self.get_tweet(tweet_id)
 
         return response.json()
     
     def create_media(self, media):
-        payload = {"media_data": media}
+        payload = {
+        'media': media
+        }
 
         response = self.api.post(
             "https://upload.twitter.com/1.1/media/upload.json",
-            json=payload,
+            files=payload,
         )
 
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             return self.create_media(media)
         
         return response.json()
@@ -119,7 +124,7 @@ class TwitterAPI:
         )
 
         if response.status_code != 201:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             self.create_tweet(kwargs)
 
         logger.info(f"Tweeted. Response code: {response.status_code}")
@@ -153,7 +158,7 @@ class TwitterAPI:
             json=payload
         )
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             self.delete_all_rules()
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
@@ -168,7 +173,7 @@ class TwitterAPI:
             json=payload,
         )
         if response.status_code != 201:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             self.set_rules()
 
         logger.info(f"Set rules. Response code: {response.status_code}")
@@ -189,12 +194,14 @@ class TwitterAPI:
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.error_handler(response)
             return self.get_stream()
 
         return response
     
     def error_handler(self, response):
+        logger.info(json.dumps(response.json()))
+
         if (response.status_code >= 400) and (response.status_code < 420):
             logger.error(
                 f"Request returned an error: {response.status_code} {response.text}.")
