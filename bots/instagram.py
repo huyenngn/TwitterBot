@@ -1,7 +1,7 @@
 import os
 import time
 import requests
-from translate import Content_Translator
+from translate import ContentTranslator
 from api import TwitterAPI
 from setup import logger, settings
 
@@ -10,7 +10,7 @@ handles = settings["insta_handles"]
 
 class Instagram_Reposter(TwitterAPI):
     def __init__(self, api=None):
-        self.trans = Content_Translator()
+        self.trans = ContentTranslator()
         super().__init__(api=api)
 
     def get_recents(self, user_id):

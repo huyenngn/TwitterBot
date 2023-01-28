@@ -2,12 +2,12 @@ import json
 import threading
 import time
 from api import TwitterAPI
-from translate import Content_Translator
+from translate import ContentTranslator
 from setup import logger, settings
 
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api=None):
-        self.trans = Content_Translator()
+        self.trans = ContentTranslator()
         self.last_response_time = None
         super(Twitter_Interacter, self).__init__(api)
 
@@ -101,7 +101,7 @@ class Twitter_Interacter(TwitterAPI):
                             indent=4, sort_keys=True))
                     text, username, x, a, z = self.get_data(parent)
                     mentioned = False
-                    if "entities" in parent["data"] and ("mentions" in parent["data"]["entities"]):
+                    if ("entities" in parent["data"]) and ("mentions" in parent["data"]["entities"]):
                         for user in parent["data"]["entities"]["mentions"]:
                             if self.username == user["username"]:
                                 mentioned = True
@@ -136,9 +136,7 @@ class Twitter_Interacter(TwitterAPI):
                     x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     text, username, x, a, image_urls = self.get_data(parent)
-                    print("meow1")
                     translation = self.trans.translate_text(text)
-                    print("meow2")
                     translated_images = []
                     if image_urls:
                         for url in image_urls:

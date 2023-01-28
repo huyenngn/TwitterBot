@@ -5,19 +5,18 @@ from googletrans import Translator
 from google.api_core.exceptions import AlreadyExists
 from google.cloud import translate_v3beta1 as translate
 from google.cloud import vision
-import base64
 import requests
 
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
 
-class Content_Translator:
+class ContentTranslator:
     def __init__(self):
         self.gt = Translator()
         self.trans = translate.TranslationServiceClient()
         self.vision = vision.ImageAnnotatorClient()
         self.location = "us-central1"
-        self.font = ImageFont.truetype("NotoSerif-Regular.ttf", 15)
+        self.font = ImageFont.truetype("NotoSerif-Regular.ttf", 16)
 
     def translate_image(self, url):
         response = requests.get(url).content
@@ -29,6 +28,13 @@ class Content_Translator:
         data = self.vision.document_text_detection(image=image)
 
         for page in data.full_text_annotation.pages:
+            is_thai = False
+            for language in page.detected_languages:
+                if language.language_code == "th":
+                    is_thai = True
+                    break
+            if not is_thai:
+                break
             for block in page.blocks:
                 for paragraph in block.paragraphs:
                     poly = []
@@ -48,7 +54,6 @@ class Content_Translator:
                     draw.text(poly[0],text,(0,0,255),font=self.font)
         buff = BytesIO()
         pil_image.save(buff, format="JPEG")
-        res = base64.b64encode(buff.getvalue())
         return buff.getvalue()
     
     def create_glossary(self, glossary_name, glossary_uri):
@@ -109,11 +114,10 @@ class Content_Translator:
                 "glossary_config": glossary_config,
             }
         )
-
         return result.glossary_translations[0].translated_text
 
     def google_translate(self, text):
-        return self.gt(text, src='th', dst='en').text
+        return self.gt.translate(text, src='th', dst='en').text
 
     
 def main():
