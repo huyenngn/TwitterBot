@@ -1,7 +1,7 @@
 from io import BytesIO
 import os
 from PIL import Image, ImageDraw, ImageFont
-from googletrans import Translator as GT
+from googletrans import Translator
 from google.api_core.exceptions import AlreadyExists
 from google.cloud import translate_v3beta1 as translate
 from google.cloud import vision
@@ -11,9 +11,9 @@ import requests
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
 
-class Translator:
+class Content_Translator:
     def __init__(self):
-        self.gt = GT()
+        self.gt = Translator()
         self.trans = translate.TranslationServiceClient()
         self.vision = vision.ImageAnnotatorClient()
         self.location = "us-central1"

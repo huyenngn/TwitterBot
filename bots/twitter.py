@@ -2,12 +2,12 @@ import json
 import threading
 import time
 from api import TwitterAPI
-from translate import Translator
+from translate import Content_Translator
 from setup import logger, settings
 
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api=None):
-        self.trans = Translator()
+        self.trans = Content_Translator()
         self.last_response_time = None
         super(Twitter_Interacter, self).__init__(api)
 
