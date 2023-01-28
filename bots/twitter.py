@@ -97,6 +97,8 @@ class Twitter_Interacter(TwitterAPI):
                 if tag == "mention":
                     x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
+                    logger.info(json.dumps(parent,
+                            indent=4, sort_keys=True))
                     text, username, x, a, z = self.get_data(parent)
                     mentioned = False
                     for user in parent["data"]["entities"]["mentions"]:
