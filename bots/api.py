@@ -1,14 +1,9 @@
-import os
+from setup import logger
 import requests
 import time
 from requests_oauthlib import OAuth1Session
 import json
-import base64
-from helpers import logger
-import threading
-
-from twitter import Twitter_Interacter
-from instagram import Instagram_Reposter
+import os
 
 consumer_key = os.getenv("CONSUMER_KEY")
 consumer_secret = os.getenv("CONSUMER_SECRET")
@@ -21,47 +16,32 @@ def bearer_oauth(r):
     r.headers["User-Agent"] = "v2FilteredStreamPython"
     return r
 
-def error_handler(response, wait_time):
-    if (response.status_code >= 400) and (response.status_code < 420):
-        logger.error(
-            f"Request returned an error: {response.status_code} {response.text}.")
-        raise Exception("Exiting.")
-    elif (response.status_code >= 420) and (response.status_code <= 429):
-        limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
-        logger.error(
-            f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
-        saved = time.time()
-        while (time.time() - saved) < limit:
-            time.sleep(1)
-    else:
-        wait_time = min(wait_time, 320)
-        logger.error(
-            f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {wait_time}.")
-        saved = time.time()
-        while (time.time() - saved) < wait_time:
-            time.sleep(1)
-        wait_time *= 2
+class TwitterAPI:
+    def __init__(self, api = None):
+        if api == None:
+            self.api = OAuth1Session(
+                consumer_key,
+                client_secret=consumer_secret,
+                resource_owner_key=access_token,
+                resource_owner_secret=access_token_secret,
+            )
+        else:
+            self.api = api
 
-class API:
-    def __init__(self):
-        self.api = None
-        self.id = "1601180254931980288"
+        response = self.api.post("https://api.twitter.com/2/users/me")
+
+        if response.status_code != 200:
+            self.error_handler(response)
+            self.get_user()
+            
+        self.id = response["data"]["id"]
+        self.username = response["data"]["username"]
         self.wait_time = 5
 
-        logger.info("Set up client.")
+        logger.info(f"Set up API. Response code: {response.status_code}")
     
     def get_api(self):
-        if self.api == None:
-            self.api = OAuth1Session(
-            consumer_key,
-            client_secret=consumer_secret,
-            resource_owner_key=access_token,
-            resource_owner_secret=access_token_secret,
-            )
-
         return self.api
-    def set_api(self, api):
-        self.api = api
 
     def like(self, tweet_id):
         payload = {"tweet_id": tweet_id}
@@ -92,9 +72,9 @@ class API:
         response = self.api.get(
             "https://api.twitter.com/2/tweets/{}".format(tweet_id),
             params={
-                "expansions": "author_id,attachments.media_keys",
+                "expansions": "author_id,attachments.media_keys,entities.mentions.username",
                 "tweet.fields": "referenced_tweets,entities",
-                "media.fields": "url",
+                "media.fields": "url,type",
                 "user.fields": "username"}
         )
 
@@ -104,10 +84,8 @@ class API:
 
         return response.json()
     
-    def post_media(self, media):
-        encoded_string = base64.b64encode(media.read())
-
-        payload = {"media_data": encoded_string}
+    def create_media(self, media):
+        payload = {"media_data": media}
 
         response = self.api.post(
             "https://upload.twitter.com/1.1/media/upload.json",
@@ -116,7 +94,7 @@ class API:
 
         if response.status_code != 200:
             self.error_handler(response, self.wait_time)
-            return self.post_media(media)
+            return self.create_media(media)
         
         return response.json()
 
@@ -197,14 +175,12 @@ class API:
 
         logger.info(json.dumps(response.json()))
 
-    def get_stream(self, stream_rules):
-        self.delete_all_rules()
-        self.set_rules(stream_rules)
+    def get_stream(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id,attachments.media_keys",
+            params={"expansions": "author_id,attachments.media_keys,entities.mentions.username",
                     "tweet.fields": "referenced_tweets",
-                    "media.fields": "url",
+                    "media.fields": "url,type",
                     "user.fields": "username"},
             auth=bearer_oauth,
             stream=True
@@ -217,16 +193,24 @@ class API:
             return self.get_stream()
 
         return response
-
-def main():
-    ti = Twitter_Interacter()
-    api = ti.get_api()
-    t_twitter = threading.Thread(target=ti.start)
-    t_twitter.start()
-    ir = Instagram_Reposter()
-    ir.set_api(api)
-    t_insta = threading.Thread(target=ir.start)
-    t_insta.start()
-
-if __name__ == "__main__":
-    main()
+    
+    def error_handler(self, response):
+        if (response.status_code >= 400) and (response.status_code < 420):
+            logger.error(
+                f"Request returned an error: {response.status_code} {response.text}.")
+            raise Exception("Exiting.")
+        elif (response.status_code >= 420) and (response.status_code <= 429):
+            limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
+            logger.error(
+                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+            saved = time.time()
+            while (time.time() - saved) < limit:
+                time.sleep(1)
+        else:
+            self.wait_time = min(self.wait_time, 320)
+            logger.error(
+                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}.")
+            saved = time.time()
+            while (time.time() - saved) < self.wait_time:
+                time.sleep(1)
+            self.wait_time *= 2

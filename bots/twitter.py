@@ -1,42 +1,30 @@
-import threading
 import json
+import threading
 import time
+from api import TwitterAPI
 from translate import Translator
-from config import API
-from helpers import logger
+from setup import logger, settings
 
-twitter_handles = {
-    "freen": "srchafreen",
-    "becky": "AngelssBecky",
-    "nam": "namorntaraaa",
-    "gap": "GAPtheseries",
-    "bot": "FreenBeckyBot"
-}
 
-emojis = {
-    "freen":  "\ud83d\udc30",
-    "becky": "\ud83e\udda6",
-    "nam": "\ud83d\udea2",
-    "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
-    "other": "\ud83d\udc64",
-    "bot": "\ud83e\udd16"
-}
-
-stream_rules = [
-    # {"value": 'from:joohwangblink -is:retweet', "tag": "freenbeck"},
-    {"value": '@FreenBeckyBot -from:FreenBeckyBot -to:FreenBeckyBot is:reply -is:retweet', "tag": "mention"},
-    # {"value": 'retweets_of:FreenBeckyBot OR to:FreenBeckyBot', "tag": "interact"},
-    {"value": '(from:'+twitter_handles["freen"]+' OR from:'+twitter_handles["becky"]+') -is:retweet', "tag": "freenbeck"},
-]
-
-class Twitter_Interacter(API):
-    def __init__(self):
+class Twitter_Interacter(TwitterAPI):
+    def __init__(self, api):
         self.trans = Translator()
         self.last_response_time = None
+        super(Twitter_Interacter, self).__init__(api)
 
-        super(Twitter_Interacter, self).__init__()
-
-    def translate_tweet(self, json_response, tweet_id):
+    def create_rules(self):
+        rule = "("
+        for bias in settings["biases"]:
+            rule += "from:"+settings["twitter_handles"][bias]+" OR "
+        rule = rule[:-3]+") -is:retweet"
+        
+        rules = [
+            {"value": "@"+self.username+" -from:"+self.username+" -to:"+self.username+" -is:retweet", "tag": "mention"},
+            {"value": rule, "tag": "update"},
+        ]
+        return rules
+    
+    def get_data(self, json_response):
         is_quote = ("referenced_tweets" in json_response["data"]) and (
             json_response["data"]["referenced_tweets"][0]["type"] == "quoted")
         is_reply = ("referenced_tweets" in json_response["data"]) and (
@@ -44,6 +32,7 @@ class Twitter_Interacter(API):
         has_media = "media" in json_response["includes"]
 
         text = json_response["data"]["text"]
+        image_urls = []
 
         if is_quote:
             text = text.rsplit(' ', 1)[0]
@@ -52,36 +41,50 @@ class Twitter_Interacter(API):
             mentions = text.split('@', reply_number)[-1].split(' ', 1)
             text = mentions[-1] if len(mentions) > 1 else ""
         if has_media and text != "":
-            media_number = len(json_response["includes"]["media"])
-            links = text.rsplit('https://', media_number)
+            medias = json_response["includes"]["media"]
+            for media in medias:
+                if media["type"] == "photo":
+                    image_urls.append(media["url"])
+            links = text.rsplit('https://', len(medias))
             text = links[0] if len(links) > 1 else text
 
+        tag = json_response["matching_rules"][0]["tag"]
         username = json_response["includes"]["users"][0]["username"]
-        if username in twitter_handles.values():
-            emoji = list(twitter_handles.keys())[list(twitter_handles.values()).index(username)]
+        tweet_id = json_response["data"]["id"]
+
+        if "referenced_tweets" in json_response["data"]:
+            parent_id = json_response["data"]["referenced_tweets"][0]["id"]
         else:
-            emoji = "other"
-        
-        translation = emojis[emoji] + ": "
-        translation += self.trans.translate_text(text).replace("#", "#.")
+            parent_id = None
+
+        return (tag, text, username, tweet_id, parent_id, image_urls)
+    
+    def send_tweet(self, username, text, tweet_id, medias):
+        if username in settings["twitter_handles"].values():
+            emoji = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
+            translation = settings["emojis"][emoji] + ": "
+            translation += text.replace("#", "#.")
+        else:
+            translation = "["+text.replace("#", "#.")+"]"
 
         reply_id = tweet_id
-        is_thread = False
-        while 250 < len(translation):
-            parts = translation[247:].split(" ", 1)
-            temp = translation[:247]+ parts[0] + "..."
-            new_tweet = self.create_tweet(text=temp, in_reply_to_tweet_id=reply_id)
-            if not is_thread:
-                result = new_tweet
-                is_thread = True
+        if 250 < len(translation):
+            last_part = translation[247:].split(" ", 1)
+            first_part = translation[:247]+ last_part[0] + "..."
+            if medias:
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id, media_ids=medias)
+            else:
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id)
             reply_id = new_tweet["data"]["id"]
-            translation = "..." + parts[-1]
+            translation = "..." + last_part[-1]
+            self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+        else:
+            if medias:
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias)
+            else:
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
 
-        new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
-        if not is_thread:
-            result = new_tweet
-
-        return result
+        return new_tweet
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -90,53 +93,45 @@ class Twitter_Interacter(API):
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response,
                             indent=4, sort_keys=True))
-
-                tag = json_response["matching_rules"][0]["tag"]
+                
+                tag, text, username, tweet_id, parent_id, image_urls = self.get_data(json_response)
 
                 if tag == "mention":
-                    print("meow1")
-                    # get parent and translate parent reply to child#
-                    tweet_id = json_response["data"]["id"]
-                    parent_id = json_response["data"]["referenced_tweets"][0]["id"]
+
                     parent = self.get_tweet(parent_id)
-                    logger.info(json.dumps(parent,
-                            indent=4, sort_keys=True))
                     mentioned = False
-                    for user in parent["includes"]["users"]:
-                        if self.id == user["id"]:
+                    for user in parent["entities"]["mentions"]:
+                        if self.username == user["username"]:
                             mentioned = True
+                            break
                     if not mentioned:
-                        new_tweet = self.translate_tweet(parent, tweet_id)
-                # elif tag == "interact":
-                #     tweet_id = json_response["data"]["id"]
-                #     self.like(tweet_id)
-                elif tag == "freenbeck":
-                    print("meow")
-                    # translate tweet reply to tweet
-                    # if has parent translate parent reply to tweets translation
-                    tweet_id = json_response["data"]["id"]
+                        translation = self.trans.google_translate(text)
+                        self.send_tweet(username, translation, tweet_id, [])
+
+                elif tag == "update":
+                    
                     self.like(tweet_id)
                     self.retweet(tweet_id)
-                    new_tweet = self.translate_tweet(json_response, tweet_id)
+                    translation = self.trans.translate_text(text)
+                    translated_images = []
+                    if image_urls:
+                        for url in image_urls:
+                            encoded_image = self.trans.translate_image(url)
+                            media_id = self.create_media(encoded_image)["media_id"]
+                            translated_images.append(media_id)
+                    new_tweet = self.send_tweet(username, translation, tweet_id, translated_images)
                     tweet_id = new_tweet["data"]["id"]
                     self.retweet(tweet_id)
-                    if "referenced_tweets" in json_response["data"]:
-                        print("meow4")
-                        parent_id = json_response["data"]["referenced_tweets"][0]["id"]
+                    if parent_id != None:
                         parent = self.get_tweet(parent_id)
                         username = parent["includes"]["users"][0]["username"]
-                        if username not in [twitter_handles["becky"], twitter_handles["freen"]]:
-                            new_tweet = self.translate_tweet(parent, tweet_id)
-                            print("meow5")
-                else:
-                    pass
-                # for m in json_response["includes"]["media"]:
-                    # translation = translation + "\n image: " + self.trans.translate_image(url=m["url"])
-                    # id = self.post_media(img)
-                    # medias.append(id)
+                        name = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
+                        if name not in settings["biases"]:
+                            translation = self.trans.translate_text(text)
+                            self.send_tweet(username, translation, tweet_id, [])
 
     def start(self):
-        response = self.get_stream(stream_rules)
+        response = self.get_stream()
         self.last_response_time = time.time()
         t_handler = threading.Thread(target=self.response_handler(response))
         t_handler.start()
@@ -148,3 +143,5 @@ class Twitter_Interacter(API):
                 logger.info("Disconnected.")
                 t_handler = threading.Thread(target=self.response_handler(response))
                 t_handler.start()
+
+
