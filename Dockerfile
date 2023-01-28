@@ -8,6 +8,7 @@ COPY bots/translate.py /bots/
 COPY requirements.txt /tmp
 COPY twitterbot-376108-554b24ce03a2.json /tmp
 RUN pip3 install -r /tmp/requirements.txt
+RUN echo $HOME
 
 WORKDIR /bots
 CMD ["python3", "main.py"]
