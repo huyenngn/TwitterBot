@@ -101,10 +101,11 @@ class Twitter_Interacter(TwitterAPI):
                             indent=4, sort_keys=True))
                     text, username, x, a, z = self.get_data(parent)
                     mentioned = False
-                    for user in parent["data"]["entities"]["mentions"]:
-                        if self.username == user["username"]:
-                            mentioned = True
-                            break
+                    if "entities" in parent["data"] and ("mentions" in parent["data"]["entities"]):
+                        for user in parent["data"]["entities"]["mentions"]:
+                            if self.username == user["username"]:
+                                mentioned = True
+                                break
                     if not mentioned:
                         translation = self.trans.google_translate(text)
                         self.send_tweet(username, translation, tweet_id, [])
