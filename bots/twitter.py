@@ -99,7 +99,7 @@ class Twitter_Interacter(TwitterAPI):
                     parent = self.get_tweet(parent_id)
                     text, username, x, a, z = self.get_data(parent)
                     mentioned = False
-                    for user in parent["entities"]["mentions"]:
+                    for user in parent["data"]["entities"]["mentions"]:
                         if self.username == user["username"]:
                             mentioned = True
                             break
