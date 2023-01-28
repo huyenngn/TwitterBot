@@ -17,7 +17,7 @@ class Translator:
         self.trans = translate.TranslationServiceClient()
         self.vision = vision.ImageAnnotatorClient()
         self.location = "us-central1"
-        self.font = ImageFont.truetype("./assets/NotoSerif-Regular.ttf", 15)
+        self.font = ImageFont.truetype("NotoSerif-Regular.ttf", 15)
 
     def translate_image(self, url):
         response = requests.get(url).content
