@@ -75,8 +75,8 @@ class TwitterAPI:
         response = self.api.get(
             "https://api.twitter.com/2/tweets/{}".format(tweet_id),
             params={
-                "expansions": "author_id,attachments.media_keys",
-                "tweet.fields": "referenced_tweets,entities.mentions.username",
+                "expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                "tweet.fields": "referenced_tweets,entities",
                 "media.fields": "url,type",
                 "user.fields": "username"}
         )
@@ -183,8 +183,8 @@ class TwitterAPI:
     def get_stream(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id,attachments.media_keys",
-                    "tweet.fields": "referenced_tweets,entities.mentions.username",
+            params={"expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                    "tweet.fields": "referenced_tweets,entities",
                     "media.fields": "url,type",
                     "user.fields": "username"},
             auth=bearer_oauth,
