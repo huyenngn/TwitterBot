@@ -1,6 +1,6 @@
 import logging
 import threading
-from instagram import Instagram_Reposter
+# from instagram import Instagram_Reposter
 from twitter import Twitter_Interacter
 
 settings = {
