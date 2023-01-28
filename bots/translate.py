@@ -113,7 +113,7 @@ class Translator:
         return result.glossary_translations[0].translated_text
 
     def google_translate(self, text):
-        return self.trans.gt(text, src='th', dst='en').text
+        return self.gt(text, src='th', dst='en').text
 
     
 def main():
