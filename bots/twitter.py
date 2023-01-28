@@ -5,7 +5,6 @@ from api import TwitterAPI
 from translate import Translator
 from setup import logger, settings
 
-
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api):
         self.trans = Translator()
