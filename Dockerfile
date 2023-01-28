@@ -6,7 +6,7 @@ COPY bots/twitter.py /bots/
 COPY bots/setup.py /bots/
 COPY bots/translate.py /bots/
 COPY requirements.txt /tmp
-COPY twitterbot-376108-554b24ce03a2.json /tmp
+COPY twitterbot-376108-554b24ce03a2.json /bots
 RUN pip3 install -r /tmp/requirements.txt
 RUN echo $HOME
 
