@@ -115,9 +115,9 @@ class Twitter_Interacter(TwitterAPI):
                     translated_images = []
                     if image_urls:
                         for url in image_urls:
-                            encoded_image = self.trans.translate_image(url)
-                            media_id = self.create_media(encoded_image)["media_id"]
-                            translated_images.append(media_id)
+                            raw_image = self.trans.translate_image(url)
+                            media_id = self.create_media(raw_image)["media_id"]
+                            translated_images.append(str(media_id))
                     new_tweet = self.send_tweet(username, translation, tweet_id, translated_images)
                     tweet_id = new_tweet["data"]["id"]
                     self.retweet(tweet_id)
@@ -140,12 +140,8 @@ class Twitter_Interacter(TwitterAPI):
                     if image_urls:
                         for url in image_urls:
                             raw_image = self.trans.translate_image(url)
-                            print("meow4")
                             media_id = self.create_media(raw_image)["media_id"]
                             translated_images.append(str(media_id))
-                    print(translated_images)
-                    print("meow3")
-
                     self.send_tweet(username, translation, tweet_id, translated_images)
 
 
