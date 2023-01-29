@@ -24,10 +24,6 @@ class Instagram_Reposter(TwitterAPI):
         )
         logger.info(f"Got recent Instagram posts. Response code: {response.status_code}")
 
-        if response.status_code != 200:
-            # TODO: error handler
-            return self.get_recents(user_id, index)
-
         return response.json()
     
     def start(self):
