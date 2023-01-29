@@ -23,6 +23,9 @@ class Instagram_Reposter(TwitterAPI):
                 "since": self.last_checked_time[index]}
         )
         logger.info(f"Got recent Instagram posts. Response code: {response.status_code}")
+        if response.status_code != 200:
+            time.sleep(600)
+            self.get_recents(user_id, index)
 
         return response.json()
     

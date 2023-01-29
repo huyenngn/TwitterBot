@@ -113,7 +113,7 @@ class Twitter_Interacter(TwitterAPI):
                                 mentioned = True
                                 break
                     if not mentioned:
-                        translation = self.trans.google_translate(text)
+                        translation = self.trans.translate_text(text)
                         self.send_tweet(username, translation, tweet_id, [])
 
                 elif tag == "update":
