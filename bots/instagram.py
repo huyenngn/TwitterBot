@@ -29,7 +29,7 @@ class Instagram_Reposter(TwitterAPI):
     def start(self):
         while True:
             for index, key in enumerate(settings["biases"]):
-                response = self.get_recents(settings["insta_handles"][key], index)
+                response = self.get_recents(settings["insta_ids"][key], index)
                 self.last_checked_time[index] = time.time()
                 for post in response["data"]:
                     text = post["caption"]
