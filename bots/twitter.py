@@ -16,9 +16,14 @@ class Twitter_Interacter(TwitterAPI):
         for bias in settings["biases"]:
             rule += "from:"+settings["twitter_handles"][bias]+" OR "
         rule = rule[:-4]+") -is:retweet"
-        
+
+        admin_rule = "t35t is:reply -to:"+self.username+" ("
+        for admin in settings["admins"]:
+            admin_rule += "from:"+admin+" OR "
+        admin_rule = admin_rule[:-3]+"from:"+self.username+") -is:retweet"
+
         rules = [
-            {"value": "t35t is:reply -to:"+self.username+" -is:retweet from:"+self.username, "tag": "admin"},
+            {"value": admin_rule, "tag": "admin"},
             {"value": "@"+self.username+" is:reply -from:"+self.username+" -to:"+self.username+" -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
         ]
@@ -94,6 +99,7 @@ class Twitter_Interacter(TwitterAPI):
                             indent=4, sort_keys=True))
                 
                 tag = json_response["matching_rules"][0]["tag"]
+                
                 if tag == "mention":
                     x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
@@ -144,8 +150,6 @@ class Twitter_Interacter(TwitterAPI):
                             media_id = self.create_media(raw_image)["media_id"]
                             translated_images.append(str(media_id))
                     self.send_tweet(username, translation, tweet_id, translated_images)
-
-
 
     def start(self):
         response = self.get_stream()

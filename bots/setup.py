@@ -2,6 +2,7 @@ import logging
 
 settings = {
     "biases" : ["freen", "becky"],
+    "admins" : ["srchafreen", "AngelssBecky"],
     "twitter_handles" : {
         "freen": "srchafreen",
         "becky": "AngelssBecky",
@@ -18,6 +19,15 @@ settings = {
         "freen": "srchafreen",
         "becky": "AngelssBecky"
     },
+}
+
+glossary = {
+    "พุง":"Belly",
+    "น่ายัก":"cute",
+    "ยัก":"love",
+    "หมูแดง":"MuDaeng",
+    "ง้อด้วย":"waiting for reconciliation",
+    "งอน":"sulking"
 }
 
 logging.basicConfig(level=logging.INFO)
