@@ -15,7 +15,7 @@ class Twitter_Interacter(TwitterAPI):
         rule = "("
         for bias in settings["biases"]:
             rule += "from:"+settings["twitter_handles"][bias]+" OR "
-        rule = rule[:-4]+")"
+        rule = rule[:-4]+") -is:retweet"
 
         admin_rule = "t35t is:reply -to:"+self.username+" ("
         for admin in settings["admins"]:
