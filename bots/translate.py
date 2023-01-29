@@ -20,7 +20,7 @@ class ContentTranslator:
         self.small = ImageFont.truetype("NotoSerif-Regular.ttf", 10)
         self.medium = ImageFont.truetype("NotoSerif-Regular.ttf", 20)
         self.large = ImageFont.truetype("NotoSerif-Regular.ttf", 30)
-        self.trans = Translator()
+        self.google = Translator()
 
     def translate_image(self, url):
         response = requests.get(url).content
@@ -64,7 +64,7 @@ class ContentTranslator:
         for th, en in glossary.items():
             translation = translation.replace(th, en)
 
-        return self.trans.translate(translation, src='th', dst='en').text
+        return self.google.translate(translation, src='th', dst='en').text
 
     
 def main():

@@ -15,7 +15,7 @@ class Twitter_Interacter(TwitterAPI):
         rule = "("
         for bias in settings["biases"]:
             rule += "from:"+settings["twitter_handles"][bias]+" OR "
-        rule = rule[:-4]+") -is:retweet"
+        rule = rule[:-4]+")"
 
         admin_rule = "t35t is:reply -to:"+self.username+" ("
         for admin in settings["admins"]:
@@ -99,7 +99,7 @@ class Twitter_Interacter(TwitterAPI):
                             indent=4, sort_keys=True))
                 
                 tag = json_response["matching_rules"][0]["tag"]
-                
+
                 if tag == "mention":
                     x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
