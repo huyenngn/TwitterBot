@@ -31,6 +31,7 @@ class Instagram_Reposter(TwitterAPI):
             for index, key in enumerate(settings["biases"]):
                 response = self.get_recents(settings["insta_ids"][key], index)
                 self.last_checked_time[index] = time.time()
+                logger.info(f"Fetching data for {key}")
                 for post in response["data"]:
                     text = post["caption"]
                     translation = post["timestamp"][2:].replace("-", "") + " " + settings["emojis"][key] + post["username"] + " via Instagram:\n"
