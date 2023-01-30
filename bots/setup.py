@@ -17,21 +17,26 @@ settings = {
     },
 }
 
+# Replacements applied before translating
 glossary = {
     "อะะ" : " ahh",
     "ยัก" : "รัก",
     "ฟรีน" : " Freen",
     "ง้อ" : " reconcile",
     "สาม" : " Sam",
+    "นุคน" : "หนู",
     "นุ" : "หนู",
     "หนู" : " Nu",
-    "ด้วย" : " please"
+    # "ด้วย" : " please"
 }
 
+# Replacements applied after translating
 corrections = {
     "#" : "#.",
     "older brother" : "Phi",
-    "nuke" : "Nu"
+    "I " : "",
+    "I'm " : "",
+    "I am" : "",
 }
 
 logging.basicConfig(level=logging.INFO)
