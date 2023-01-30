@@ -26,9 +26,9 @@ translation_settings = {
         "คนรัก" : "คนที่รัก",   # people who love
         "มามี้" : "mami",
         "ยัก" : "รัก",        # yak
-        "ฟรีน" : "ไมเคิล",    # Freen -> Michael
-        "ง้อ" : "reconcile", # reconcile ->
-        "งอน" : "sulk",     # sulk ->
+        "ฟรีน" : "มิแรนด้า",    # Freen -> Miranda
+        "ง้อ" : "reconcile",
+        "งอน" : "sulk",
         "สาม" : "มาเรีย",     # Sam -> Maria
         "นุคน" : "แซนดร้า",   # Nu -> Sandra
         "นุ" : "แซนดร้า",
@@ -38,7 +38,7 @@ translation_settings = {
     },
     "corrections" : {
         "#" : "#.",
-        "Michael" : "Freen",
+        "Miranda" : "Freen",
         "Sandra" : "Nu",
         "Maria" : "Sam"
     }
