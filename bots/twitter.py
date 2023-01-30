@@ -3,7 +3,7 @@ import threading
 import time
 from api import TwitterAPI
 from translate import ContentTranslator
-from setup import logger, settings
+from setup import logger, bot_settings
 
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api=None):
@@ -13,12 +13,12 @@ class Twitter_Interacter(TwitterAPI):
 
     def create_rules(self):
         rule = "("
-        for bias in settings["biases"]:
-            rule += "from:"+settings["twitter_handles"][bias]+" OR "
+        for bias in bot_settings["biases"]:
+            rule += "from:"+bot_settings["twitter_handles"][bias]+" OR "
         rule = rule[:-4]+") -is:retweet"
 
         admin_rule = "t35t is:reply -to:"+self.username+" ("
-        for admin in settings["admins"]:
+        for admin in bot_settings["admins"]:
             admin_rule += "from:"+admin+" OR "
         admin_rule = admin_rule[:-3]+"from:"+self.username+") -is:retweet"
 
@@ -64,9 +64,9 @@ class Twitter_Interacter(TwitterAPI):
         return (text, username, tweet_id, parent_id, image_urls)
     
     def send_tweet(self, username, text, tweet_id, medias):
-        if username in settings["twitter_handles"].values():
-            emoji = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
-            translation = settings["emojis"][emoji] + ": "
+        if username in bot_settings["twitter_handles"].values():
+            emoji = list(bot_settings["twitter_handles"].keys())[list(bot_settings["twitter_handles"].values()).index(username)]
+            translation = bot_settings["emojis"][emoji] + ": "
             translation += text
         else:
             translation = "["+text+"]"
@@ -133,8 +133,8 @@ class Twitter_Interacter(TwitterAPI):
                     if parent_id != None:
                         parent = self.get_tweet(parent_id)
                         text, username, x, y, z = self.get_data(parent)
-                        name = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
-                        if name not in settings["biases"]:
+                        name = list(bot_settings["twitter_handles"].keys())[list(bot_settings["twitter_handles"].values()).index(username)]
+                        if name not in bot_bot_settings["biases"]:
                             translation = self.trans.translate_text(text)
                             self.send_tweet(username, translation, tweet_id, [])
 

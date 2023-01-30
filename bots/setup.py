@@ -1,6 +1,6 @@
 import logging
 
-settings = {
+bot_settings = {
     "biases" : ["freen", "becky"],
     "admins" : ["srchafreen", "AngelssBecky"],
     "twitter_handles" : {
@@ -17,26 +17,24 @@ settings = {
     },
 }
 
-# Replacements applied before translating
-glossary = {
-    "อะะ" : " ahh",
-    "ยัก" : "รัก",
-    "ฟรีน" : " Freen",
-    "ง้อ" : " reconcile",
-    "สาม" : " Sam",
-    "นุคน" : "หนู",
-    "นุ" : "หนู",
-    "หนู" : " Nu",
-    # "ด้วย" : " please"
-}
-
-# Replacements applied after translating
-corrections = {
-    "#" : "#.",
-    "older brother" : "Phi",
-    "I " : "",
-    "I'm " : "",
-    "I am" : "",
+translation_settings = {
+    "src" : "th",
+    "dst" : "en",
+    # Replacements applied before translating
+    "glossary" : {
+        "อะะ" : " ahh",
+        "คนรัก" : "people who love",
+        "มามี้" : "mami",
+        "ยัก" : "รัก", # yak -> rak
+        "ฟรีน" : "Freen",
+        "ง้อ" : "reconcile",
+        "งอน" : "sulk",
+        "สาม" : "แซม", # Sam
+        "นุคน" : "เบ็คกี้",
+        "นุ" : "เบ็คกี้",
+        "หนู" : "เบ็คกี้",
+        "พี่" : "ภคินี" # Phi -> sister
+    }
 }
 
 logging.basicConfig(level=logging.INFO)

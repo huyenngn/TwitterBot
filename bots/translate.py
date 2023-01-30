@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
 from google.cloud import vision
 import requests
-from setup import glossary, corrections
+from setup import translation_settings
 
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
@@ -61,19 +61,18 @@ class ContentTranslator:
             return ""
         
         translation = text
-        for th, en in glossary.items():
+        for th, en in translation_settings["glossary"].items():
             translation = translation.replace(th, en)
         
-        translation = self.google.translate(translation, src='th', dst='en').text
-        for src, dst in corrections.items():
-            translation = translation.replace(src, dst)
+        translation = self.google.translate(translation, src=translation_settings["src"], dst=translation_settings["dst"]).text
+        translation = translation.replace("#", "#.")
 
         return translation
 
     
 def main():
     trans = ContentTranslator()
-    print(trans.translate_text("ไม่ส่งรูปให้นุบ้างเลยยยยยยยย งอน (ง้อด้วย)🥹"))
+    print(trans.translate_text("Happy birthday bb ของพี่ 🦦🤏🏻 20 ขวบแล้ว ขอให้หนูมีความสุข เติบโตในแบบที่หนูอยากจะเป็น สมหวังในทุกๆเรื่อง แต่ถ้าวันนึงมีเรื่องไหนที่ไม่เป็นไปตามที่หนูหวัง ก็ไม่เป็นไรเพราะหนูจะมีพี่อยู่ข้างๆเสมอ ขอให้สุขภาพแข็งแรงไม่เจ็บไม่ป่วย ไม่ซนไม่ดื้อ รักรัก 🤍  "))
     # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
 
 if __name__ == "__main__":
