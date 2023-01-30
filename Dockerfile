@@ -2,7 +2,6 @@ FROM python:3.10-slim-bullseye
 
 COPY bots/main.py /bots/
 COPY bots/api.py /bots/
-COPY bots/instagram.py /bots/
 COPY bots/twitter.py /bots/
 COPY bots/setup.py /bots/
 COPY bots/translate.py /bots/
