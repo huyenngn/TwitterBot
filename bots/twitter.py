@@ -17,7 +17,7 @@ class Twitter_Interacter(TwitterAPI):
             rule += "from:"+bot_settings["twitter_handles"][bias]+" OR "
         rule = rule[:-4]+") -is:retweet"
 
-        admin_rule = "t35t is:reply -to:"+self.username+" ("
+        admin_rule = "t35t is:reply -to:"+self.username+" (from:"+self.username+" OR "
         for admin in bot_settings["admins"]:
             admin_rule += "from:"+admin+" OR "
         admin_rule = admin_rule[:-3]+"from:"+self.username+") -is:retweet"
