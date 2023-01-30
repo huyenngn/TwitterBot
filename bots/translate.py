@@ -73,7 +73,7 @@ class ContentTranslator:
     
 def main():
     trans = ContentTranslator()
-    print(trans.translate_text("อยากเจอนุอะยังงงง😋"))
+    print(trans.translate_text("ไม่ส่งรูปให้นุบ้างเลยยยยยยยย งอน (ง้อด้วย)🥹"))
     # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
 
 if __name__ == "__main__":

@@ -22,20 +22,20 @@ settings = {
 }
 
 glossary = {
-    "อะะ" : "ahh",
-    "อะ" : "ah",
+    "อะะ" : " ahh",
     "ยัก" : "รัก",
-    "ฟรีน" : "Freen",
-    "ง้อ" : "reconcile",
-    "งอน" : "sulk",
-    "สาม" : "Sam",
-    "หนู" : "Nu"
+    "ฟรีน" : " Freen",
+    "ง้อ" : " reconcile",
+    "สาม" : " Sam",
+    "นุ" : "หนู",
+    "หนู" : " Nu",
+    "ด้วย" : " please"
 }
 
 corrections = {
     "#" : "#.",
     "older brother" : "Phi",
-    "nuke" : "Nu",
+    "nuke" : "Nu"
 }
 
 logging.basicConfig(level=logging.INFO)
