@@ -22,12 +22,11 @@ settings = {
 }
 
 glossary = {
-    "พุง":"Belly",
-    "น่ายัก":"cute",
-    "ยัก":"love",
-    "หมูแดง":"MuDaeng",
-    "ง้อด้วย":"waiting for reconciliation",
-    "งอน":"sulking"
+    "ยัก" : "รัก",
+    "น่ารัก" : "cute",
+    "ฟรีน" : "Freen",
+    "ง้อ" : "reconcile",
+    "งอน" : "sulk"
 }
 
 logging.basicConfig(level=logging.INFO)

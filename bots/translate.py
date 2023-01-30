@@ -51,7 +51,7 @@ class ContentTranslator:
                     text_height = max([abs(poly[0][1]-poly[1][1]), abs(poly[0][1]-poly[2][1])])
                     print(text_height)
                     font = self.small if text_height < 40 else (self.medium if text_height < 60 else self.large)
-                    draw.text(poly[0],text,(0,0,255),font=font)
+                    draw.text(poly[0],text,(0,0,0),font=font)
         pil_image.show()
 
         return img2byte(pil_image)
@@ -64,13 +64,13 @@ class ContentTranslator:
         for th, en in glossary.items():
             translation = translation.replace(th, en)
 
-        return self.google.translate(translation, src='th', dst='en').text
+        return self.google.translate(translation, src='th', dst='en').text.replace("#", "#.")
 
     
 def main():
     trans = ContentTranslator()
-    # print(trans.translate_text("น่าน่ายักกกอะะะ"))
-    trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
+    print(trans.translate_text("น่าน่ายักกกอะะะ"))
+    # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
 
 if __name__ == "__main__":
     main()

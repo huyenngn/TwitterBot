@@ -67,9 +67,9 @@ class Twitter_Interacter(TwitterAPI):
         if username in settings["twitter_handles"].values():
             emoji = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
             translation = settings["emojis"][emoji] + ": "
-            translation += text.replace("#", "#.")
+            translation += text
         else:
-            translation = "["+text.replace("#", "#.")+"]"
+            translation = "["+text+"]"
 
         reply_id = tweet_id
         if 250 < len(translation):
@@ -113,7 +113,7 @@ class Twitter_Interacter(TwitterAPI):
                                 mentioned = True
                                 break
                     if not mentioned:
-                        translation = self.trans.translate_text(text)
+                        translation = self.trans.google_translate(text)
                         self.send_tweet(username, translation, tweet_id, [])
 
                 elif tag == "update":
@@ -135,7 +135,7 @@ class Twitter_Interacter(TwitterAPI):
                         text, username, x, y, z = self.get_data(parent)
                         name = list(settings["twitter_handles"].keys())[list(settings["twitter_handles"].values()).index(username)]
                         if name not in settings["biases"]:
-                            translation = self.trans.translate_text(text)
+                            translation = self.trans.google_translate(text)
                             self.send_tweet(username, translation, tweet_id, [])
 
                 elif tag == "admin":
