@@ -23,17 +23,24 @@ translation_settings = {
     # Replacements applied before translating
     "glossary" : {
         "อะะ" : " ahh",
-        "คนรัก" : "คนที่รัก",
+        "คนรัก" : "คนที่รัก",   # people who love
         "มามี้" : "mami",
-        "ยัก" : "รัก", # yak -> rak
-        "ฟรีน" : "Freen",
-        "ง้อ" : "reconcile",
-        "งอน" : "sulk",
-        "สาม" : "แซม", # Sam
-        "นุคน" : "เบ็คกี้",
-        "นุ" : "เบ็คกี้",
-        "หนู" : "เบ็คกี้",
-        "พี่" : "ภคินี" # Phi -> sister
+        "ยัก" : "รัก",        # yak
+        "ฟรีน" : "ไมเคิล",    # Freen -> Michael
+        "ง้อ" : "reconcile", # reconcile ->
+        "งอน" : "sulk",     # sulk ->
+        "สาม" : "มาเรีย",     # Sam -> Maria
+        "นุคน" : "แซนดร้า",   # Nu -> Sandra
+        "นุ" : "แซนดร้า",
+        "หนู" : "แซนดร้า",
+        "พี่" : "ภคินี",        # Phi
+        "ยัง" : ""           # still/yet
+    },
+    "corrections" : {
+        "#" : "#.",
+        "Michael" : "Freen",
+        "Sandra" : "Nu",
+        "Maria" : "Sam"
     }
 }
 
