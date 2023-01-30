@@ -23,7 +23,7 @@ translation_settings = {
     # Replacements applied before translating
     "glossary" : {
         "อะะ" : " ahh",
-        "คนรัก" : "people who love",
+        "คนรัก" : "คนที่รัก",
         "มามี้" : "mami",
         "ยัก" : "รัก", # yak -> rak
         "ฟรีน" : "Freen",
