@@ -15,7 +15,7 @@ settings = {
         "nam": "\ud83d\udea2",
         "gap": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
     },
-    "insta_ids" : {
+    "insta_handles" : {
         "freen": "233012029",
         "becky": "44813644697"
     },

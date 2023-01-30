@@ -1,43 +1,53 @@
+from io import BytesIO
 import os
 import time
 import requests
 from translate import ContentTranslator
 from api import TwitterAPI
 from setup import logger, settings
+import collections
+from instagrapi import Client
 
-access_token = os.getenv("IG_ACCESS_TOKEN")
+ig_username = os.getenv("IG_USERNAME")
+ig_password = os.getenv("IG_PASSWORD")
+
 
 class Instagram_Reposter(TwitterAPI):
     def __init__(self, api=None):
         self.trans = ContentTranslator()
-        t = time.time()
-        self.last_checked_time = [t] * len(settings["biases"])
+        self.known_posts = collections.deque(maxlen=5)
+        self.cl = Client()
+        self.cl.login(ig_username, ig_password)
         super(Instagram_Reposter, self).__init__(api)
 
-    def get_recents(self, user_id, index):
-        response = requests.get(
-            "https://graph.instagram.com/v15.0/tweets/{}/media".format(user_id),
-            params={
-                "access_token": access_token,
-                "fields": "id,caption,media_url,timestamp,username",
-                "since": self.last_checked_time[index]}
-        )
-        logger.info(f"Got recent Instagram posts. Response code: {response.status_code}")
-        if response.status_code != 200:
-            time.sleep(600)
-            self.get_recents(user_id, index)
-
-        return response.json()
+    def get_recents(self, username):
+        user_id = self.cl.user_id_from_username(username)
+        medias = self.cl.user_medias(user_id, 5)
+        new_posts = []
+        
+        for media in medias:
+            media_pk = media["pk"]
+            if media_pk not in self.known_posts:
+                self.known_posts.append(media_pk)
+                text = media["caption_text"]
+                url = "https://www.instagram.com/p/" + media["code"]
+                t = media["taken_at"].strftime("%Y")[2:] + media["taken_at"].strftime("%m%d")
+                response = requests.get(media["thumbnail_url"]).content
+                buff = BytesIO(response)
+                new_posts.append((text, url, t, buff.getvalue))
+        
+        return new_posts
     
     def start(self):
         while True:
-            for index, key in enumerate(settings["biases"]):
-                response = self.get_recents(settings["insta_ids"][key], index)
-                self.last_checked_time[index] = time.time()
+            for key in settings["biases"]:
+                username = settings["insta_handles"][key]
+                new_posts = self.get_recents(username)
                 logger.info(f"Fetching data for {key}")
-                for post in response["data"]:
-                    text = post["caption"]
-                    translation = post["timestamp"][2:].replace("-", "") + " " + settings["emojis"][key] + post["username"] + " via Instagram:\n"
-                    translation += "\"" + self.trans.translate_text(text) + "\"\n" + post["media_url"]
-                    self.create_tweet(text=translation)
+                for post in new_posts:
+                    text = post[2] + settings["emojis"][key] + username + " via IG:\n"
+                    text += self.trans.translate_text(post[0]) + "(translated with GT)\n"
+                    text += "> " + post[1]
+                    media_id = self.create_media(post[3])["media_id"]
+                    self.create_tweet(text=text, media_ids=[media_id])
                 time.sleep(600)
