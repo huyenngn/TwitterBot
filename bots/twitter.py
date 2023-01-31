@@ -14,13 +14,13 @@ class Twitter_Interacter(TwitterAPI):
     def create_rules(self):
         rule = "("
         for bias in bot_settings["biases"]:
-            rule += "from:"+bot_settings["twitter_handles"][bias]+" OR "
+            rule += "from:"+bias+" OR "
         rule = rule[:-4]+") -is:retweet"
 
-        admin_rule = "t35t is:reply -to:"+self.username+" (from:"+self.username+" OR "
+        admin_rule = "t35t is:reply -to:"+self.username+" ("
         for admin in bot_settings["admins"]:
             admin_rule += "from:"+admin+" OR "
-        admin_rule = admin_rule[:-3]+"from:"+self.username+") -is:retweet"
+        admin_rule += "from:"+self.username+") -is:retweet"
 
         rules = [
             {"value": admin_rule, "tag": "admin"},
@@ -64,9 +64,8 @@ class Twitter_Interacter(TwitterAPI):
         return (text, username, tweet_id, parent_id, image_urls)
     
     def send_tweet(self, username, text, tweet_id, medias):
-        if username in bot_settings["twitter_handles"].values():
-            emoji = list(bot_settings["twitter_handles"].keys())[list(bot_settings["twitter_handles"].values()).index(username)]
-            translation = bot_settings["emojis"][emoji] + ": "
+        if username in bot_settings["twitter_handles"].keys():
+            translation = bot_settings["twitter_handles"][username]+ ": "
             translation += text
         else:
             translation = "["+text+"]"
@@ -81,12 +80,22 @@ class Twitter_Interacter(TwitterAPI):
                 new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id)
             reply_id = new_tweet["data"]["id"]
             translation = "..." + last_part[-1]
-            self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+            leaf_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
         else:
             if medias:
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias)
             else:
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+            leaf_tweet = new_tweet
+
+        trans_notes = ""
+
+        pronouns = ["I ", "I'm ", "You ", "You're "," me ", " you ", " me.", " you.", " my ", " your ", "My ", "Your "]
+        if "Pung" in translation: trans_notes += "Nong Pung = Nong Belly = Becky's nickname; "
+        if "Nu" in translation: trans_notes += "Nu = refers to small children (e.g: Becky); "
+        if any(ext in translation for ext in pronouns):
+            trans_notes += "I/you/ me/you my/your might be mixed up sometimes."
+        self.create_tweet(text="T/N: This translation is automated and not reliable!\n"+trans_notes, in_reply_to_tweet_id=leaf_tweet)
 
         return new_tweet
 
@@ -133,8 +142,7 @@ class Twitter_Interacter(TwitterAPI):
                     if parent_id != None:
                         parent = self.get_tweet(parent_id)
                         text, username, x, y, z = self.get_data(parent)
-                        name = list(bot_settings["twitter_handles"].keys())[list(bot_settings["twitter_handles"].values()).index(username)]
-                        if name not in bot_bot_settings["biases"]:
+                        if username not in bot_settings["biases"]:
                             translation = self.trans.translate_text(text)
                             self.send_tweet(username, translation, tweet_id, [])
 
