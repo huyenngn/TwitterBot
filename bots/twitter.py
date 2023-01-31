@@ -95,7 +95,7 @@ class Twitter_Interacter(TwitterAPI):
         if "Nu" in translation: trans_notes += "Nu = refers to small children (e.g: Becky); "
         if any(ext in translation for ext in pronouns):
             trans_notes += "I/you/ me/you my/your might be mixed up sometimes."
-        self.create_tweet(text="T/N: This translation is automated and not reliable!\n"+trans_notes, in_reply_to_tweet_id=leaf_tweet)
+        self.create_tweet(text="T/N: This translation is automated and not reliable!\n"+trans_notes, in_reply_to_tweet_id=leaf_tweet["data"]["id"])
 
         return new_tweet
 
