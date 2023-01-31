@@ -27,11 +27,13 @@ translation_settings = {
         "มามี้" : "ไมเคิล",     # Mami -> Michael
         "ยัก" : "รัก",        # yak
         "ฟรีนกี้" : "มิแรนด้า",    # Freenky -> Miranda
+        "ฟรีน" : "Freen",
         "สาม" : "มาเรีย",     # Sam -> Maria
         "นุคน" : "แซนดร้า",   # Nu -> Sandra
         "นุ" : "แซนดร้า",
         "หนู" : "แซนดร้า",
-        "พี" : "พี่สาว",
+        "พี" : "Phi",
+        "น้อง" : "Nong",
         "ยัง" : "",           # still/yet
     },
     # replacements applied after translating

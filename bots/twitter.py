@@ -80,22 +80,12 @@ class Twitter_Interacter(TwitterAPI):
                 new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id)
             reply_id = new_tweet["data"]["id"]
             translation = "..." + last_part[-1]
-            leaf_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+            self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
         else:
             if medias:
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias)
             else:
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
-            leaf_tweet = new_tweet
-
-        trans_notes = ""
-
-        pronouns = ["I ", "I'm ", "You ", "You're "," me ", " you ", " me.", " you.", " my ", " your ", "My ", "Your "]
-        if "Pung" in translation: trans_notes += "Nong Pung = Nong Belly = Becky's nickname; "
-        if "Nu" in translation: trans_notes += "Nu = refers to small children (e.g: Becky); "
-        if any(ext in translation for ext in pronouns):
-            trans_notes += "I/you/ me/you my/your might be mixed up sometimes."
-        self.create_tweet(text="T/N: This translation is automated and not reliable!\n"+trans_notes, in_reply_to_tweet_id=leaf_tweet["data"]["id"])
 
         return new_tweet
 
