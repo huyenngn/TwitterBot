@@ -33,7 +33,6 @@ translation_settings = {
         "น้อง" : "Nong",       # Nong
         "พี่" : "Phi",       # Phi
         "ยัง" : "",           # still/yet
-        "เเ" : "",
     },
     # replacements applied after translating
     "corrections" : {
