@@ -28,9 +28,7 @@ translation_settings = {
         "ยัก" : "รัก",        # yak
         "ฟรีน" : "อัมพร",   # Freen -> Amporn
         "สาม" : "สมชาย",        # Sam -> Somchai
-        "นุคน" : "แซนดร้า",   # Nu -> Sandra
-        "นุ" : "แซนดร้า",
-        "หนู" : "แซนดร้า",
+        "หนู" : "แซนดร้า",        # Nu -> Sandra
         "น้องพุง" : "กมลา",     # Nong Belly -> Kamala
         "น้อง" : "Nong",       # Nong
         "พี่" : "Phi",       # Phi
@@ -46,7 +44,7 @@ translation_settings = {
         "Kamala" : "Nong Belly",
         "I am" : "",
         "I'm " : "",
-        "I" : "",
+        "I " : "",
         " me " : " me/you ",
         " me." : " me/you.",
     }
