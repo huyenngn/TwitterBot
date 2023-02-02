@@ -24,8 +24,6 @@ translation_settings = {
     "glossary" : {
         "อะะ" : " ahh",
         "คนรัก" : "คนที่รัก",
-        # "ง้อ" : "reconcile",
-        # "งอน" : "sulking",
         "มามี้" : "สมศักดิ์",     # Mami -> Somsak
         "ยัก" : "รัก",        # yak
         "ฟรีนกี้" : "เจค",      # Freenky -> Jake
