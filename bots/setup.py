@@ -26,9 +26,12 @@ translation_settings = {
         "คนรัก" : "คนที่รัก",
         "มามี้" : "สมศักดิ์",     # Mami -> Somsak
         "ยัก" : "รัก",        # yak
+        "ฟรีนกี้" : "เจค",      # Freenky -> Jake
         "ฟรีน" : "อัมพร",   # Freen -> Amporn
         "สาม" : "สมชาย",        # Sam -> Somchai
-        "หนู" : "แซนดร้า",        # Nu -> Sandra
+        "นุคน" : "หนู",   # Nu -> Sandra
+        "นุ" : "หนู",
+        "หนู" : "แซนดร้า",
         "น้องพุง" : "กมลา",     # Nong Belly -> Kamala
         "น้อง" : "Nong",       # Nong
         "พี่" : "Phi",       # Phi
@@ -38,6 +41,7 @@ translation_settings = {
     "corrections" : {
         "#" : "#.",
         "Amporn" : "Freen",
+        "Jake" : "Freenky",
         "Sandra" : "Nu",
         "Somchai" : "Sam",
         "Somsak" : "Mami",
