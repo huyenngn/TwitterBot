@@ -36,23 +36,32 @@ class Twitter_Interacter(TwitterAPI):
             json_response["data"]["referenced_tweets"][0]["type"] == "replied_to")
         has_media = "media" in json_response["includes"]
 
-        text = json_response["data"]["text"]
+        text = " " + json_response["data"]["text"] + " "
         image_urls = []
 
         if is_quote:
-            text = text.rsplit(' ', 1)[0]
+            parts = text.rsplit('https://', 1)
+            tail = parts[-1].split(' ', 1)
+            text = parts[0] + (tail[-1] if len(tail) > 1 else "")
+
         if is_reply:
             reply_number = len(json_response["includes"]["users"]) - 1
-            mentions = text.split('@', reply_number)[-1].split(' ', 1)
-            text = mentions[-1] if len(mentions) > 1 else ""
-        if has_media and text != "":
+            mentions = text.split('@', reply_number)
+
+            text = ""
+            for mention in mentions:
+                temp = mention.split(' ', 1)
+                text += temp[-1] if len(temp)>1 else ""
+
+        if has_media:
             medias = json_response["includes"]["media"]
             for media in medias:
                 if media["type"] == "photo":
                     image_urls.append(media["url"])
-            links = text.rsplit('https://', len(medias))
-            text = links[0] if len(links) > 1 else text
 
+            for url in image_urls:
+                text  = text.replace(url, "")
+                
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
 
@@ -61,7 +70,7 @@ class Twitter_Interacter(TwitterAPI):
         else:
             parent_id = None
 
-        return (text, username, tweet_id, parent_id, image_urls)
+        return (" ".join(text.split()), username, tweet_id, parent_id, image_urls)
     
     def send_tweet(self, username, text, tweet_id, medias):
         if username in bot_settings["twitter_handles"].keys():
@@ -164,3 +173,35 @@ class Twitter_Interacter(TwitterAPI):
                 t_handler.start()
 
 
+def main():
+    text = " @gvedsbh 123456789 @gvedsbh 123456789 https://gvedsbh 123456789 "
+    # raw_text = " 123456789 https://gvedsbh "
+    # # raw_text = " https://gvedsbh 123456789 "
+    # # raw_text = " https://gvedsbh "
+    # # raw_text = " 123456789 https://gvedsbh 123456789 "
+    
+    parts = text.rsplit('https', 1)
+    tail = parts[-1].split(' ', 1)
+    text = parts[0] + (tail[-1] if len(tail) > 1 else "")
+
+    # raw_text = " 123456789 @gvedsbh "
+    # raw_text = " @gvedsbh 123456789 "
+    # raw_text = " @gvedsbh "
+    # raw_text = " 123456789 @gvedsbh 123456789 "
+    # raw_text = " 123456789 @gvedsbh @gvedsbh "
+    # raw_text = " @gvedsbh @gvedsbh 123456789 "
+    # raw_text = " @gvedsbh 123456789 @gvedsbh "
+    # raw_text = " 123456789 @gvedsbh 123456789 @gvedsbh "
+    reply_number = 2
+    mentions = text.split('@', reply_number)
+
+    text = ""
+    for mention in mentions:
+        temp = mention.split(' ', 1)
+        text += temp[-1] if len(temp)>1 else ""
+
+    text = " ".join(text.split())
+    print(text, len(text))
+
+if __name__ == "__main__":
+    main()
