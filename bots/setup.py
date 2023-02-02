@@ -24,15 +24,17 @@ translation_settings = {
     "glossary" : {
         "อะะ" : " ahh",
         "คนรัก" : "คนที่รัก",
+        # "ง้อ" : "reconcile",
+        # "งอน" : "sulking",
         "มามี้" : "สมศักดิ์",     # Mami -> Somsak
         "ยัก" : "รัก",        # yak
         "ฟรีนกี้" : "เจค",      # Freenky -> Jake
         "ฟรีน" : "อัมพร",   # Freen -> Amporn
-        "สาม" : "สมชาย",        # Sam -> Somchai
+        "สาม" : "แซม",        # Sam 
         "นุคน" : "หนู",   # Nu -> Sandra
         "นุ" : "หนู",
         "หนู" : "แซนดร้า",
-        "น้องพุง" : "กมลา",     # Nong Belly -> Kamala
+        "น้องพุง" : "สมชาย",     # Nong Belly -> Somchai
         "น้อง" : "Nong",       # Nong
         "พี่" : "Phi",       # Phi
         "ยัง" : "",           # still/yet
@@ -43,9 +45,8 @@ translation_settings = {
         "Amporn" : "Freen",
         "Jake" : "Freenky",
         "Sandra" : "Nu",
-        "Somchai" : "Sam",
         "Somsak" : "Mami",
-        "Kamala" : "Nong Belly",
+        "Somchai" : "Nong Belly",
         "I am" : "",
         "I'm " : "",
         "I " : "",

@@ -14,6 +14,14 @@ def img2byte(pil_image):
         pil_image.save(buff, format="JPEG")
         return buff.getvalue()
 
+def cleanText(s):
+    if len(s) < 5:
+        return s
+    if (s[0] == s[1] == s[2] == s[3] == s[4]) :
+        return cleanText(s[1:])
+    
+    return s[0]+cleanText(s[1:])
+ 
 class ContentTranslator:
     def __init__(self):
         self.vision = vision.ImageAnnotatorClient()
@@ -63,8 +71,8 @@ class ContentTranslator:
         translation = text
         for th, en in translation_settings["glossary"].items():
             translation = translation.replace(th, en)
-        
-        translation = self.google.translate(translation, src=translation_settings["src"], dst=translation_settings["dst"]).text
+
+        translation = self.google.translate(cleanText(translation), src=translation_settings["src"], dst=translation_settings["dst"]).text
         for src, dst in translation_settings["corrections"].items():
             translation = translation.replace(src, dst)
 
@@ -73,7 +81,8 @@ class ContentTranslator:
     
 def main():
     trans = ContentTranslator()
-    print(trans.translate_text("Awwwww🥹 ขอบคุณนะคะคนเก่งของหนู เราผ่านอะไรด้วยกันมาเยอะมากๆ แล้วเชื่อว่าจะเจออีกหลายๆอย่างที่จะต้องจับมือแน่นๆไว้🫶 ขอให้มีแต่คนรักแล้วเอ็นดูฟรีนกี้ของนุด้วยนะ เติบโตไปด้วยกันนะคะ หนูไม่ไปไหนอยู่แล้ว ถ้าวันไหนไม่มีใครมองมาทางนี้ก้มีนุคนนึงนะคับ☺️ ps: ไปต่อยมวยกันค่า😛"))
+    text = "ไม่ส่งรูปให้นุบ้างเลยยยยยยยย งอน (ง้อด้วย)🥹"
+    print(trans.translate_text(text))
     # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
 
 if __name__ == "__main__":
