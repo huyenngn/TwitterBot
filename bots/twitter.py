@@ -111,23 +111,7 @@ class Twitter_Interacter(TwitterAPI):
                 
                 tag = json_response["matching_rules"][0]["tag"]
 
-                if tag == "mention":
-                    x, y, tweet_id, parent_id, z = self.get_data(json_response)
-                    parent = self.get_tweet(parent_id)
-                    logger.info(json.dumps(parent,
-                            indent=4, sort_keys=True))
-                    text, username, x, a, z = self.get_data(parent)
-                    mentioned = False
-                    if ("entities" in parent["data"]) and ("mentions" in parent["data"]["entities"]):
-                        for user in parent["data"]["entities"]["mentions"]:
-                            if self.username == user["username"]:
-                                mentioned = True
-                                break
-                    if not mentioned:
-                        translation = self.trans.translate_text(text)
-                        self.send_tweet(username, translation, tweet_id, [])
-
-                elif tag == "update":
+                if tag == "update":
                     text, username, tweet_id, parent_id, image_urls = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
@@ -148,7 +132,7 @@ class Twitter_Interacter(TwitterAPI):
                             translation = self.trans.translate_text(text)
                             self.send_tweet(username, translation, tweet_id, [])
 
-                elif tag == "admin":
+                elif tag == "admin" or tag == "mention":
                     x, y, tweet_id, parent_id, z = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     text, username, x, a, image_urls = self.get_data(parent)
@@ -160,6 +144,22 @@ class Twitter_Interacter(TwitterAPI):
                             media_id = self.create_media(raw_image)["media_id"]
                             translated_images.append(str(media_id))
                     self.send_tweet(username, translation, tweet_id, translated_images)
+
+                # elif tag == "mention":
+                #     x, y, tweet_id, parent_id, z = self.get_data(json_response)
+                #     parent = self.get_tweet(parent_id)
+                #     logger.info(json.dumps(parent,
+                #             indent=4, sort_keys=True))
+                #     text, username, x, a, z = self.get_data(parent)
+                #     mentioned = False
+                #     if ("entities" in parent["data"]) and ("mentions" in parent["data"]["entities"]):
+                #         for user in parent["data"]["entities"]["mentions"]:
+                #             if self.username == user["username"]:
+                #                 mentioned = True
+                #                 break
+                #     if not mentioned:
+                #         translation = self.trans.translate_text(text)
+                #         self.send_tweet(username, translation, tweet_id, [])
 
     def start(self):
         response = self.get_stream()
