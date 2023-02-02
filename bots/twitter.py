@@ -59,9 +59,12 @@ class Twitter_Interacter(TwitterAPI):
                 if media["type"] == "photo":
                     image_urls.append(media["url"])
 
-            for url in image_urls:
-                text  = text.replace(url, "")
-                
+            links = text.rsplit('https://', len(medias))
+            text = ""
+            for link in links:
+                temp = link.split(' ', 1)
+                text += temp[-1] if len(temp)>1 else ""
+
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
 
@@ -174,7 +177,7 @@ class Twitter_Interacter(TwitterAPI):
 
 
 def main():
-    text = " @gvedsbh 123456789 @gvedsbh 123456789 https://gvedsbh 123456789 "
+    text = " @gvedsbh https://gvedsbh 123456789 @gvedsbh https://gvedsbh 123456789 https://gvedsbh 123456789 https://gvedsbh "
     # raw_text = " 123456789 https://gvedsbh "
     # # raw_text = " https://gvedsbh 123456789 "
     # # raw_text = " https://gvedsbh "
@@ -198,6 +201,12 @@ def main():
     text = ""
     for mention in mentions:
         temp = mention.split(' ', 1)
+        text += temp[-1] if len(temp)>1 else ""
+
+    links = text.rsplit('https://', 3)
+    text = ""
+    for link in links:
+        temp = link.split(' ', 1)
         text += temp[-1] if len(temp)>1 else ""
 
     text = " ".join(text.split())
