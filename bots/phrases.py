@@ -1,3 +1,5 @@
+from translate import ContentTranslator
+
 phrases = [
 "Happy birthday bb ของพี่ 🦦🤏🏻 20 ขวบแล้ว ขอให้หนูมีความสุข เติบโตในแบบที่หนูอยากจะเป็น สมหวังในทุกๆเรื่อง แต่ถ้าวันนึงมีเรื่องไหนที่ไม่เป็นไปตามที่หนูหวัง ก็ไม่เป็นไรเพราะหนูจะมีพี่อยู่ข้างๆเสมอ ขอให้สุขภาพแข็งแรงไม่เจ็บไม่ป่วย ไม่ซนไม่ดื้อ รักรัก 🤍",
 
@@ -29,3 +31,12 @@ phrases = [
 "🥹🫶💖 รักเม่าโลกกว่านะคะ~ #400Kรักน้องพุงเม่าโลก",
 
 ]
+
+def main():
+    trans = ContentTranslator()
+    for text in phrases:
+        print(trans.translate_text(text), "\n")
+    # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
+
+if __name__ == "__main__":
+    main()

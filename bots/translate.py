@@ -5,7 +5,6 @@ from googletrans import Translator
 from google.cloud import vision
 import requests
 from setup import translation_settings
-from phrases import phrases
 
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
@@ -70,13 +69,3 @@ class ContentTranslator:
         for src, dst in translation_settings["corrections"].items():
             translation = translation.replace(src, dst)
         return translation
-
-    
-def main():
-    trans = ContentTranslator()
-    for text in phrases:
-        print(trans.translate_text(text), "\n")
-    # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
-
-if __name__ == "__main__":
-    main()
