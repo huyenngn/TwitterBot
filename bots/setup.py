@@ -35,7 +35,6 @@ translation_settings = {
         "น้องพุง" : "สมชาย",     # Nong Belly -> Somchai
         "น้อง" : "Nong",       # Nong
         "พี่" : "Phi",       # Phi
-        "ยัง" : "",           # still/yet
     },
     # replacements applied after translating
     "corrections" : {
