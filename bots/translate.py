@@ -5,6 +5,7 @@ from googletrans import Translator
 from google.cloud import vision
 import requests
 from setup import translation_settings
+from phrases import phrases
 
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
@@ -73,8 +74,8 @@ class ContentTranslator:
     
 def main():
     trans = ContentTranslator()
-    text = "Awwwww🥹 ขอบคุณนะคะคนเก่งของหนู เราผ่านอะไรด้วยกันมาเยอะมากๆ แล้วเชื่อว่าจะเจออีกหลายๆอย่างที่จะต้องจับมือแน่นๆไว้🫶 ขอให้มีแต่คนรักแล้วเอ็นดูฟรีนกี้ของนุด้วยนะ เติบโตไปด้วยกันนะคะ หนูไม่ไปไหนอยู่แล้ว ถ้าวันไหนไม่มีใครมองมาทางนี้ก้มีนุคนนึงนะคับ☺️ ps: ไปต่อยมวยกันค่า😛"
-    print(trans.translate_text(text))
+    for text in phrases:
+        print(trans.translate_text(text), "\n")
     # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
 
 if __name__ == "__main__":
