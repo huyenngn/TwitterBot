@@ -34,9 +34,9 @@ phrases = [
 
 def main():
     trans = ContentTranslator()
-    for text in phrases:
-        print(trans.translate_text(text), "\n")
-    # trans.translate_image("https://pbs.twimg.com/media/FkA-R4gUoAA1Cap?format=jpg&name=small")
+    # for text in phrases:
+    #     print(trans.translate_text(text), "\n")
+    trans.translate_image("https://pbs.twimg.com/media/FTdDgV5acAEqohP?format=jpg&name=large")
 
 if __name__ == "__main__":
     main()

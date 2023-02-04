@@ -17,9 +17,6 @@ def img2byte(pil_image):
 class ContentTranslator:
     def __init__(self):
         self.vision = vision.ImageAnnotatorClient()
-        self.small = ImageFont.truetype("NotoSerif-Regular.ttf", 10)
-        self.medium = ImageFont.truetype("NotoSerif-Regular.ttf", 20)
-        self.large = ImageFont.truetype("NotoSerif-Regular.ttf", 30)
         self.google = Translator()
 
     def translate_image(self, url):
@@ -48,9 +45,19 @@ class ContentTranslator:
                     text = " ".join(p)
                     text = self.translate_text(text)
 
-                    text_height = max([abs(poly[0][1]-poly[1][1]), abs(poly[0][1]-poly[2][1])])
-                    print(text_height)
-                    font = self.small if text_height < 40 else (self.medium if text_height < 60 else self.large)
+                    poly_width = max([abs(poly[0][0]-poly[1][0]), abs(poly[0][0]-poly[3][0])])
+                    poly_height = max([abs(poly[0][1]-poly[1][1]), abs(poly[0][1]-poly[3][1])])
+
+                    fontsize = 13
+                    font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
+                    textsize = font.getsize(text)
+                    while textsize[0] < poly_width and textsize[1] < poly_height:
+                        fontsize += 1
+                        font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
+                        textsize = font.getsize(text)
+
+                    bbox = draw.textbbox(poly[0], text, font=font)
+                    draw.rounded_rectangle(bbox, fill=(255,255,255), width=3, radius=7)
                     draw.text(poly[0],text,(0,0,0),font=font)
         pil_image.show()
 
