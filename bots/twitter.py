@@ -37,8 +37,8 @@ class Twitter_Interacter(TwitterAPI):
             tweet_type = json_response["data"]["referenced_tweets"][0]["type"]
             parent_id = json_response["data"]["referenced_tweets"][0]["id"]
         else:
-            tweet_type = None
-            parent_id = None
+            tweet_type = ""
+            parent_id = ""
 
         text = " " + json_response["data"]["text"] + " "
         if tweet_type == "quoted":
@@ -80,11 +80,10 @@ class Twitter_Interacter(TwitterAPI):
             tweet_type,
         )
 
-    def send_tweet(self, username, text, tweet_id, medias, tweet_type, *, op=None):
+    def send_tweet(self, username, text, tweet_id, medias, *, reference=("", "")):
         translation = ""
-        if (op is not None) and (op in bot_settings["twitter_handles"].keys()):
-            translation += bot_settings["twitter_handles"][username] + " "
-        translation += "" if tweet_type is not None else (tweet_type + " ")
+        if reference:
+            translation += bot_settings["twitter_handles"][reference[1]] + " " + reference[0] + " "
         if username in bot_settings["twitter_handles"].keys():
             translation += bot_settings["twitter_handles"][username] + ": "
         translation += text
@@ -151,11 +150,11 @@ class Twitter_Interacter(TwitterAPI):
                                 translated_images.append(str(media_id))
 
                         new_tweet = self.send_tweet(
-                            username, translation, tweet_id, translated_images, None
+                            username, translation, tweet_id, translated_images, ""
                         )
                         tweet_id = new_tweet["data"]["id"]
                         self.retweet(tweet_id)
-                    if parent_id is not None:
+                    if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, z, a = self.get_data(parent)
                         if parentname not in bot_settings["biases"]:
@@ -171,8 +170,7 @@ class Twitter_Interacter(TwitterAPI):
                                 translation,
                                 tweet_id,
                                 translated_images,
-                                tweet_type,
-                                op=username,
+                                (tweet_type, username)
                             )
                             tweet_id = new_tweet["data"]["id"]
                             self.retweet(tweet_id)
