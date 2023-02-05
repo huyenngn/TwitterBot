@@ -68,7 +68,7 @@ class Twitter_Interacter(TwitterAPI):
         translation = ""
         if (op != None) and (op in bot_settings["twitter_handles"].keys()):
             translation += bot_settings["twitter_handles"][username]+ " "
-        translation += "" if tweet_type is None else (tweet_type + " ")
+        translation += "" if tweet_type != None else (tweet_type + " ")
         if username in bot_settings["twitter_handles"].keys():
             translation += bot_settings["twitter_handles"][username]+ ": "
         translation += text
