@@ -5,7 +5,7 @@ from google.cloud import vision
 import requests
 from setup import translation_settings
 
-google_credentials = "twitterbot-376108-554b24ce03a2.json"
+google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
 
 
