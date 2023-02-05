@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
 from google.cloud import vision

@@ -6,6 +6,7 @@ from translate import ContentTranslator
 from setup import logger, bot_settings
 from thai2eng import get_definition
 
+
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api=None):
         self.trans = ContentTranslator()
