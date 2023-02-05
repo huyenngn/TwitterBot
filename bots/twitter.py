@@ -185,8 +185,8 @@ class Twitter_Interacter(TwitterAPI):
                                 break
                     if not mentioned:
                         translation = self.trans.translate_text(text)
+                        translated_images = []
                         if username in bot_settings["admins"]:
-                            translated_images = []
                             for url in image_urls:
                                 raw_image = self.trans.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
