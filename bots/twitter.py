@@ -181,7 +181,7 @@ class Twitter_Interacter(TwitterAPI):
                     x, y, tweet_id, parent_id, z, a = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     logger.info(json.dumps(parent, indent=4, sort_keys=True))
-                    text, username, x, y, z, a = self.get_data(parent)
+                    text, username, x, y, image_urls, z = self.get_data(parent)
                     mentioned = False
                     if ("entities" in parent["data"]) and (
                         "mentions" in parent["data"]["entities"]
