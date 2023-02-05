@@ -9,11 +9,13 @@ from setup import translation_settings
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = "twitterbot-376108"
 
+
 def img2byte(pil_image):
-        buff = BytesIO()
-        pil_image.save(buff, format="JPEG")
-        return buff.getvalue()
- 
+    buff = BytesIO()
+    pil_image.save(buff, format="JPEG")
+    return buff.getvalue()
+
+
 class ContentTranslator:
     def __init__(self):
         self.vision = vision.ImageAnnotatorClient()
@@ -23,7 +25,7 @@ class ContentTranslator:
         response = requests.get(url).content
         pil_image = Image.open(BytesIO(response))
         draw = ImageDraw.Draw(pil_image)
-        
+
         image = vision.Image(content=response)
 
         data = self.vision.document_text_detection(image=image)
@@ -35,7 +37,7 @@ class ContentTranslator:
                     for vertex in paragraph.bounding_box.vertices:
                         p = (vertex.x, vertex.y)
                         poly.append(p)
-                    draw.polygon(poly, fill=(255,255,255))
+                    draw.polygon(poly, fill=(255, 255, 255))
                     p = []
                     for word in paragraph.words:
                         w = []
@@ -45,8 +47,12 @@ class ContentTranslator:
                     text = " ".join(p)
                     text = self.translate_text(text)
 
-                    poly_width = max([abs(poly[0][0]-poly[1][0]), abs(poly[0][0]-poly[3][0])])
-                    poly_height = max([abs(poly[0][1]-poly[1][1]), abs(poly[0][1]-poly[3][1])])
+                    poly_width = max(
+                        [abs(poly[0][0] - poly[1][0]), abs(poly[0][0] - poly[3][0])]
+                    )
+                    poly_height = max(
+                        [abs(poly[0][1] - poly[1][1]), abs(poly[0][1] - poly[3][1])]
+                    )
 
                     fontsize = 13
                     font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
@@ -57,21 +63,27 @@ class ContentTranslator:
                         textsize = font.getsize(text)
 
                     bbox = draw.textbbox(poly[0], text, font=font)
-                    draw.rounded_rectangle(bbox, fill=(255,255,255), width=3, radius=7)
-                    draw.text(poly[0],text,(0,0,0),font=font)
+                    draw.rounded_rectangle(
+                        bbox, fill=(255, 255, 255), width=3, radius=7
+                    )
+                    draw.text(poly[0], text, (0, 0, 0), font=font)
         pil_image.show()
 
         return img2byte(pil_image)
-    
+
     def translate_text(self, text):
         if not text:
             return ""
-        
+
         translation = text
         for th, en in translation_settings["glossary"].items():
             translation = translation.replace(th, en)
 
-        translation = self.google.translate(translation, src=translation_settings["src"], dst=translation_settings["dst"]).text
+        translation = self.google.translate(
+            translation,
+            src=translation_settings["src"],
+            dst=translation_settings["dst"],
+        ).text
 
         for src, dst in translation_settings["corrections"].items():
             translation = translation.replace(src, dst)

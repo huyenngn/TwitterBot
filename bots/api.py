@@ -11,14 +11,16 @@ access_token = os.getenv("ACCESS_TOKEN")
 access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
 bearer_token = os.getenv("BEARER_TOKEN")
 
+
 def bearer_oauth(r):
     r.headers["Authorization"] = f"Bearer {bearer_token}"
     r.headers["User-Agent"] = "v2FilteredStreamPython"
     return r
 
+
 class TwitterAPI:
-    def __init__(self, api = None):
-        if api == None:
+    def __init__(self, api=None):
+        if api is None:
             self.api = OAuth1Session(
                 consumer_key,
                 client_secret=consumer_secret,
@@ -29,20 +31,20 @@ class TwitterAPI:
             self.api = api
 
         self.wait_time = 5
-    
+
         response = self.api.get("https://api.twitter.com/2/users/me")
 
         if response.status_code != 200:
             self.error_handler(response)
             self.get_user()
-        
+
         json_response = response.json()
-            
+
         self.id = json_response["data"]["id"]
         self.username = json_response["data"]["username"]
 
         logger.info(f"Set user data. Response code: {response.status_code}")
-    
+
     def get_api(self):
         return self.api
 
@@ -78,7 +80,8 @@ class TwitterAPI:
                 "expansions": "author_id,attachments.media_keys,entities.mentions.username",
                 "tweet.fields": "referenced_tweets,entities",
                 "media.fields": "url,type",
-                "user.fields": "username"}
+                "user.fields": "username",
+            },
         )
 
         if response.status_code != 200:
@@ -86,11 +89,9 @@ class TwitterAPI:
             return self.get_tweet(tweet_id)
 
         return response.json()
-    
+
     def create_media(self, media):
-        payload = {
-        'media': media
-        }
+        payload = {"media": media}
 
         response = self.api.post(
             "https://upload.twitter.com/1.1/media/upload.json",
@@ -100,13 +101,13 @@ class TwitterAPI:
         if response.status_code != 200:
             self.error_handler(response)
             return self.create_media(media)
-        
+
         return response.json()
 
     def create_tweet(self, **kwargs):
-        if ('text' not in kwargs) and ('media_ids' not in kwargs):
+        if ("text" not in kwargs) and ("media_ids" not in kwargs):
             raise Exception("nothing to tweet...")
-        
+
         payload = {}
         reply = ["in_reply_to_tweet_id"]
         media = ["media_ids"]
@@ -155,7 +156,7 @@ class TwitterAPI:
         response = requests.post(
             "https://api.twitter.com/2/tweets/search/stream/rules",
             auth=bearer_oauth,
-            json=payload
+            json=payload,
         )
         if response.status_code != 200:
             self.error_handler(response)
@@ -183,12 +184,14 @@ class TwitterAPI:
     def get_stream(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
-            params={"expansions": "author_id,attachments.media_keys,entities.mentions.username",
-                    "tweet.fields": "referenced_tweets,entities",
-                    "media.fields": "url,type",
-                    "user.fields": "username"},
+            params={
+                "expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                "tweet.fields": "referenced_tweets,entities",
+                "media.fields": "url,type",
+                "user.fields": "username",
+            },
             auth=bearer_oauth,
-            stream=True
+            stream=True,
         )
 
         logger.info(f"Filtered stream. Response code: {response.status_code}")
@@ -198,25 +201,28 @@ class TwitterAPI:
             return self.get_stream()
 
         return response
-    
+
     def error_handler(self, response):
         logger.info(json.dumps(response.json()))
 
         if (response.status_code >= 400) and (response.status_code < 420):
             logger.error(
-                f"Request returned an error: {response.status_code} {response.text}.")
+                f"Request returned an error: {response.status_code} {response.text}."
+            )
             raise Exception("Exiting.")
         elif (response.status_code >= 420) and (response.status_code <= 429):
-            limit = int(response.headers['x-rate-limit-reset']) - time.time() + 5
+            limit = int(response.headers["x-rate-limit-reset"]) - time.time() + 5
             logger.error(
-                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds.")
+                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds."
+            )
             saved = time.time()
             while (time.time() - saved) < limit:
                 time.sleep(1)
         else:
             self.wait_time = min(self.wait_time, 320)
             logger.error(
-                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}.")
+                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}."
+            )
             saved = time.time()
             while (time.time() - saved) < self.wait_time:
                 time.sleep(1)
