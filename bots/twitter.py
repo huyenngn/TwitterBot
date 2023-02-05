@@ -156,16 +156,16 @@ class Twitter_Interacter(TwitterAPI):
                         )
                         tweet_id = new_tweet["data"]["id"]
                         self.retweet(tweet_id)
-
-                        definitions = get_definition(text)
-                        translated_images = []
-                        for definition in definitions:
-                            media_id = self.create_media(definition)["media_id"]
-                            translated_images.append(str(media_id))
-                        new_tweet = self.send_tweet(
-                            "", "explanation:", tweet_id, translated_images
-                        )
-                        tweet_id = new_tweet["data"]["id"]
+                        if len(text) > 15:
+                            definitions = get_definition(text)
+                            translated_images = []
+                            for definition in definitions:
+                                media_id = self.create_media(definition)["media_id"]
+                                translated_images.append(str(media_id))
+                            new_tweet = self.send_tweet(
+                                "", "explanation:", tweet_id, translated_images
+                            )
+                            tweet_id = new_tweet["data"]["id"]
                     if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, z, a = self.get_data(parent)
@@ -212,14 +212,15 @@ class Twitter_Interacter(TwitterAPI):
                             username, translation, tweet_id, translated_images
                         )
                         tweet_id = new_tweet["data"]["id"]
-                        definitions = get_definition(text)
-                        translated_images = []
-                        for definition in definitions:
-                            media_id = self.create_media(definition)["media_id"]
-                            translated_images.append(str(media_id))
-                        new_tweet = self.send_tweet(
-                            "", "explanation:", tweet_id, translated_images
-                        )
+                        if len(text) > 15:
+                            definitions = get_definition(text)
+                            translated_images = []
+                            for definition in definitions:
+                                media_id = self.create_media(definition)["media_id"]
+                                translated_images.append(str(media_id))
+                            new_tweet = self.send_tweet(
+                                "", "explanation:", tweet_id, translated_images
+                            )
 
     def start(self):
         response = self.get_stream()
