@@ -7,6 +7,7 @@ COPY bots/setup.py /bots/
 COPY bots/translate.py /bots/
 COPY twitterbot-376108-554b24ce03a2.json /bots/
 COPY bots/NotoSerif-Regular.ttf /bots/
+COPY bots/thai2eng.py /bots/
 COPY requirements.txt /tmp
 RUN pip3 install --upgrade pip -r /tmp/requirements.txt
 
