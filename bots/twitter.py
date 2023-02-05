@@ -4,7 +4,7 @@ import time
 from api import TwitterAPI
 from translate import ContentTranslator
 from setup import logger, bot_settings
-
+from thai2eng import get_definition
 
 class Twitter_Interacter(TwitterAPI):
     def __init__(self, api=None):
@@ -143,6 +143,12 @@ class Twitter_Interacter(TwitterAPI):
                                 raw_image = self.trans.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
                                 translated_images.append(str(media_id))
+                        else:
+                            raw_image = get_definition(text)
+                            if raw_image.status_code == 200:
+                                media_id = self.create_media(raw_image.content)["media_id"]
+                                translated_images.append(str(media_id))
+
                         new_tweet = self.send_tweet(
                             username, translation, tweet_id, translated_images, None
                         )

@@ -1,12 +1,11 @@
 from io import BytesIO
-import os
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator
 from google.cloud import vision
 import requests
 from setup import translation_settings
 
-google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+google_credentials = "twitterbot-376108-554b24ce03a2.json"
 gcloud_id = "twitterbot-376108"
 
 
