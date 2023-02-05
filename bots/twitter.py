@@ -66,7 +66,7 @@ class Twitter_Interacter(TwitterAPI):
     
     def send_tweet(self, username, text, tweet_id, medias, tweet_type, *, op = None):
         translation = ""
-        if (op is not None) and (op in bot_settings["twitter_handles"].keys()):
+        if (op != None) and (op in bot_settings["twitter_handles"].keys()):
             translation += bot_settings["twitter_handles"][username]+ " "
         translation += "" if tweet_type is None else (tweet_type + " ")
         if username in bot_settings["twitter_handles"].keys():
