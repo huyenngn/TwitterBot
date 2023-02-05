@@ -80,13 +80,20 @@ class Twitter_Interacter(TwitterAPI):
             tweet_type,
         )
 
-    def send_tweet(self, username, text, tweet_id, medias, *, reference=("", "")):
+    def send_tweet(self, username, text, tweet_id, medias, *, reference=None):
         translation = ""
-        if reference:
-            translation += bot_settings["twitter_handles"][reference[1]] + " " + reference[0] + " "
         if username in bot_settings["twitter_handles"].keys():
             translation += bot_settings["twitter_handles"][username] + ": "
         translation += text
+        if reference is not None:
+            translation = (
+                "["
+                + bot_settings["twitter_handles"][reference[1]]
+                + " "
+                + reference[0]
+                + "] "
+                + translation
+            )
 
         reply_id = tweet_id
         if 250 < len(translation):
@@ -143,17 +150,22 @@ class Twitter_Interacter(TwitterAPI):
                                 raw_image = self.trans.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
                                 translated_images.append(str(media_id))
-                        else:
-                            raw_image = get_definition(text)
-                            if raw_image.status_code == 200:
-                                media_id = self.create_media(raw_image.content)["media_id"]
-                                translated_images.append(str(media_id))
 
                         new_tweet = self.send_tweet(
                             username, translation, tweet_id, translated_images
                         )
                         tweet_id = new_tweet["data"]["id"]
                         self.retweet(tweet_id)
+
+                        definitions = get_definition(text)
+                        translated_images = []
+                        for definition in definitions:
+                            media_id = self.create_media(definition)["media_id"]
+                            translated_images.append(str(media_id))
+                        new_tweet = self.send_tweet(
+                            "", "explanation:", tweet_id, translated_images
+                        )
+                        tweet_id = new_tweet["data"]["id"]
                     if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, z, a = self.get_data(parent)
@@ -170,7 +182,7 @@ class Twitter_Interacter(TwitterAPI):
                                 translation,
                                 tweet_id,
                                 translated_images,
-                                reference=(tweet_type, username)
+                                reference=(tweet_type, username),
                             )
                             tweet_id = new_tweet["data"]["id"]
                             self.retweet(tweet_id)
@@ -196,14 +208,17 @@ class Twitter_Interacter(TwitterAPI):
                                 raw_image = self.trans.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
                                 translated_images.append(str(media_id))
-                        else:
-                            raw_image = get_definition(text)
-                            if raw_image.status_code == 200:
-                                media_id = self.create_media(raw_image.content)["media_id"]
-                                translated_images.append(str(media_id))
-
-                        self.send_tweet(
+                        new_tweet = self.send_tweet(
                             username, translation, tweet_id, translated_images
+                        )
+                        tweet_id = new_tweet["data"]["id"]
+                        definitions = get_definition(text)
+                        translated_images = []
+                        for definition in definitions:
+                            media_id = self.create_media(definition)["media_id"]
+                            translated_images.append(str(media_id))
+                        new_tweet = self.send_tweet(
+                            "", "explanation:", tweet_id, translated_images
                         )
 
     def start(self):

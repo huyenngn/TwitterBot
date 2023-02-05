@@ -2,7 +2,11 @@ import os
 from urllib.parse import urlencode
 import requests
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageFile
+from translate import img2byte
+
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 api_flash_key = os.getenv("API_FLASH_KEY")
 
@@ -20,15 +24,28 @@ def get_definition(text):
         )
     )
 
-    return requests.get("https://api.apiflash.com/v1/urltoimage?" + params)
+    img = requests.get("https://api.apiflash.com/v1/urltoimage?" + params)
+
+    pages = []
+    if img.status_code >= 400:
+        return pages
+
+    pil_image = Image.open(BytesIO(img.content))
+    width, height = pil_image.size
+    parts = (
+        4 if height > 3000 else (3 if height > 2500 else (2 if height > 1500 else 1))
+    )
+    for i in range(0, parts):
+        crop = pil_image.crop((0, i * height / parts, width, (i + 1) * height / parts))
+        pages.append(img2byte(crop))
+
+    return pages
 
 
 def main():
-    response = get_definition(
-        "สวัสดีค่า หนูชื่อน้องชานม🧋 ขี้อ้อน อยู่ไม่ค่อยนิ่ง ยิ้มทั้งวันทั้งคืน ซนบ้างง แหะๆ มารู้จักกันมั้ยคะ🤏🏻😜💖  "
-    )
-    pil_image = Image.open(BytesIO(response))
-    pil_image.show()
+    pages = get_definition("มุมะไหว ไมเกรนจะระเบิด")
+    for page in pages:
+        page.show()
 
 
 if __name__ == "__main__":
