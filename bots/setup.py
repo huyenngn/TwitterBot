@@ -42,7 +42,6 @@ translation_settings = {
     },
     # replacements applied after translating
     "corrections": {
-        "#": "#.",
         "Sandra": "Nu",
         "I am": "",
         "I'm ": "",

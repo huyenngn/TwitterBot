@@ -95,6 +95,8 @@ class Twitter_Interacter(TwitterAPI):
                 + translation
             )
 
+        translation = translation.replace("#", "#.")
+
         reply_id = tweet_id
         if 250 < len(translation):
             last_part = translation[247:].split(" ", 1)

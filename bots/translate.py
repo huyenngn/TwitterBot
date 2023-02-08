@@ -46,6 +46,8 @@ class ContentTranslator:
                         p.append("".join(w))
                     text = " ".join(p)
                     text = self.translate_text(text)
+                    text = text.replace(", ", ",\n")
+                    text = text.replace(". ", ".\n")
 
                     poly_width = max(
                         [abs(poly[0][0] - poly[1][0]), abs(poly[0][0] - poly[3][0])]
@@ -56,17 +58,15 @@ class ContentTranslator:
 
                     fontsize = 13
                     font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
-                    textsize = font.getsize(text)
+                    textsize = font.getsize_multiline(text)
                     while textsize[0] < poly_width and textsize[1] < poly_height:
                         fontsize += 1
                         font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
-                        textsize = font.getsize(text)
+                        textsize = font.getsize_multiline(text)
 
-                    bbox = draw.textbbox(poly[0], text, font=font)
-                    draw.rounded_rectangle(
-                        bbox, fill=(255, 255, 255), width=3, radius=7
-                    )
-                    draw.text(poly[0], text, (0, 0, 0), font=font)
+                    bbox = draw.multiline_textbbox(poly[0], text, font=font)
+                    draw.rectangle(bbox, fill=(255, 255, 255))
+                    draw.multiline_text(poly[0], text, (0, 0, 0), font=font)
         pil_image.show()
 
         return img2byte(pil_image)
