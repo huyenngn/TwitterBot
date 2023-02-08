@@ -191,8 +191,9 @@ class Twitter_Interacter(TwitterAPI):
                     x, y, tweet_id, parent_id, z, a = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     logger.info(json.dumps(parent, indent=4, sort_keys=True))
-                    text, username, x, y, image_urls, z = self.get_data(parent)
+                    text, username, x, y, image_urls, tweet_type = self.get_data(parent)
                     mentioned = False
+                    
                     if ("entities" in parent["data"]) and (
                         "mentions" in parent["data"]["entities"]
                     ):
@@ -200,7 +201,7 @@ class Twitter_Interacter(TwitterAPI):
                             if self.username == user["username"]:
                                 mentioned = True
                                 break
-                    if not mentioned:
+                    if not mentioned and tweet_type != "retweeted":
                         translation = self.trans.translate_text(text)
                         translated_images = []
                         if username in bot_settings["admins"]:
