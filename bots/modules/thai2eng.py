@@ -1,7 +1,9 @@
+from io import BytesIO
 import os
 from urllib.parse import urlencode
 import requests
-from modules.util import img2byte, byte2img
+from modules.util import img2byte
+from PIL import Image
 
 api_flash_key = os.getenv("API_FLASH_KEY")
 
@@ -25,7 +27,7 @@ def get_definition(text):
     if img.status_code >= 400:
         return pages
 
-    pil_image = byte2img(img.content)
+    pil_image = Image.open(BytesIO(img.content))
     width, height = pil_image.size
     parts = (
         4 if height > 3000 else (3 if height > 2500 else (2 if height > 1500 else 1))

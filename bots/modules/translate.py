@@ -1,7 +1,7 @@
 import logging
 import os
-from modules.util import byte2img, img2byte
-from PIL import ImageDraw, ImageFont
+from modules.util import img2byte
+from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator as GT
 from google.cloud import vision
 import requests
@@ -89,7 +89,7 @@ class Translator:
     def translate_image(self, url):
         raw_image = requests.get(url).content
 
-        pil_image = byte2img(raw_image)
+        pil_image = Image.open(BytesIO(raw_image))
         draw = ImageDraw.Draw(pil_image)
 
         image = vision.Image(content=raw_image)
