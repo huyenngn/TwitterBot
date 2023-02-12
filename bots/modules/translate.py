@@ -1,3 +1,4 @@
+from io import BytesIO
 import logging
 import os
 from modules.util import img2byte
