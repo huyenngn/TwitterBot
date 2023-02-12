@@ -1,6 +1,6 @@
 import threading
 # from bots.instagram_updates import InstagramUpdatesBot
-from translate_tweets import TranslateTweetsBot
+from bots.translate_tweets import TranslateTweetsBot
 
 
 def main():
