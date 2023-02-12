@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 bot_settings = {
     # twitter user the bot will automatically interact with
     "biases": ["srchafreen", "AngelssBecky"],
-    # test users and admins (excluding the bots account)
-    "admins": ["srchafreen", "AngelssBecky"],
+    # test users and admins
+    "admins": ["FreenBeckyBot", "srchafreen", "AngelssBecky"],
     # twitter users and their respective emoji/alias
     # this could be accounts your biases regularily interact with
     # (including your biases)
