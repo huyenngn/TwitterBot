@@ -8,7 +8,7 @@ COPY bots/modules/twitter.py /bots/modules/
 COPY bots/modules/translate.py /bots/modules/
 COPY bots/modules/thai2eng.py /bots/modules/
 COPY bots/modules/instagram.py /bots/modules/
-COPY bots/modules/helpers.py /bots/modules/
+COPY bots/modules/util.py /bots/modules/
 COPY bots/modules/NotoSerif-Regular.ttf /bots/modules/
 COPY requirements.txt /tmp
 RUN pip3 install --upgrade pip -r /tmp/requirements.txt
