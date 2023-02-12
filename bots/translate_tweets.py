@@ -1,17 +1,36 @@
 import json
+import logging
 import threading
 import time
-from api import TwitterAPI
-from translate import ContentTranslator
-from setup import logger, bot_settings
-from thai2eng import get_definition
+from bots.modules.thai2eng import get_definition
+from bots.modules.twitter import Twitter
+from bots.modules.translate import Translator
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+bot_settings = {
+    # twitter user the bot will automatically interact with
+    "biases": ["srchafreen", "AngelssBecky"],
+    # test users and admins (excluding the bots account)
+    "admins": ["srchafreen", "AngelssBecky"],
+    # twitter users and their respective emoji/alias
+    # this could be accounts your biases regularily interact with
+    # (including your biases)
+    "twitter_handles": {
+        "srchafreen": "\ud83d\udc30",
+        "AngelssBecky": "\ud83e\udda6",
+        "namorntaraaa": "\ud83d\udea2",
+        "GAPtheseries": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
+    },
+}
 
 
-class Twitter_Interacter(TwitterAPI):
+class TranslateTweetsBot(Twitter):
     def __init__(self, api=None):
-        self.trans = ContentTranslator()
+        self.tl = Translator()
         self.last_response_time = None
-        super(Twitter_Interacter, self).__init__(api)
+        super().__init__(api)
 
     def create_rules(self):
         rule = "("
@@ -20,14 +39,7 @@ class Twitter_Interacter(TwitterAPI):
         rule = rule[:-4] + ")"
 
         rules = [
-            {
-                "value": "@"
-                + self.username
-                + " is:reply -to:"
-                + self.username
-                + " -is:retweet",
-                "tag": "mention",
-            },
+            {"value": "\"@" + self.username + " tl\" is:reply -to:" + self.username + " -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
         ]
         return rules
@@ -145,11 +157,11 @@ class Twitter_Interacter(TwitterAPI):
                     self.like(tweet_id)
                     self.retweet(tweet_id)
                     if tweet_type != "retweeted":
-                        translation = self.trans.translate_text(text)
+                        translation = self.tl.translate_text(text)
                         translated_images = []
                         if image_urls:
                             for url in image_urls:
-                                raw_image = self.trans.translate_image(url)
+                                raw_image = self.tl.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
                                 translated_images.append(str(media_id))
 
@@ -172,11 +184,11 @@ class Twitter_Interacter(TwitterAPI):
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, z, a = self.get_data(parent)
                         if parentname not in bot_settings["biases"]:
-                            translation = self.trans.translate_text(text)
+                            translation = self.tl.translate_text(text)
                             translated_images = []
                             if image_urls:
                                 for url in image_urls:
-                                    raw_image = self.trans.translate_image(url)
+                                    raw_image = self.tl.translate_image(url)
                                     media_id = self.create_media(raw_image)["media_id"]
                                     translated_images.append(str(media_id))
                             new_tweet = self.send_tweet(
@@ -193,9 +205,9 @@ class Twitter_Interacter(TwitterAPI):
                     x, y, tweet_id, parent_id, z, a = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     logger.info(json.dumps(parent, indent=4, sort_keys=True))
-                    text, username, x, y, image_urls, tweet_type = self.get_data(parent)
+                    text, username, x, y, image_urls, z = self.get_data(parent)
                     mentioned = False
-                    
+
                     if ("entities" in parent["data"]) and (
                         "mentions" in parent["data"]["entities"]
                     ):
@@ -203,12 +215,12 @@ class Twitter_Interacter(TwitterAPI):
                             if self.username == user["username"]:
                                 mentioned = True
                                 break
-                    if not mentioned and tweet_type != "retweeted":
-                        translation = self.trans.translate_text(text)
+                    if not mentioned:
+                        translation = self.tl.translate_text(text)
                         translated_images = []
                         if username in bot_settings["admins"]:
                             for url in image_urls:
-                                raw_image = self.trans.translate_image(url)
+                                raw_image = self.tl.translate_image(url)
                                 media_id = self.create_media(raw_image)["media_id"]
                                 translated_images.append(str(media_id))
                         new_tweet = self.send_tweet(
@@ -238,44 +250,3 @@ class Twitter_Interacter(TwitterAPI):
                 logger.info("Disconnected.")
                 t_handler = threading.Thread(target=self.response_handler(response))
                 t_handler.start()
-
-
-def main():
-    text = " @gvedsbh https://gvedsbh 123456789 @gvedsbh https://gvedsbh 123456789 https://gvedsbh 123456789 https://gvedsbh "
-    # raw_text = " 123456789 https://gvedsbh "
-    # # raw_text = " https://gvedsbh 123456789 "
-    # # raw_text = " https://gvedsbh "
-    # # raw_text = " 123456789 https://gvedsbh 123456789 "
-
-    parts = text.rsplit("https", 1)
-    tail = parts[-1].split(" ", 1)
-    text = parts[0] + (tail[-1] if len(tail) > 1 else "")
-
-    # raw_text = " 123456789 @gvedsbh "
-    # raw_text = " @gvedsbh 123456789 "
-    # raw_text = " @gvedsbh "
-    # raw_text = " 123456789 @gvedsbh 123456789 "
-    # raw_text = " 123456789 @gvedsbh @gvedsbh "
-    # raw_text = " @gvedsbh @gvedsbh 123456789 "
-    # raw_text = " @gvedsbh 123456789 @gvedsbh "
-    # raw_text = " 123456789 @gvedsbh 123456789 @gvedsbh "
-    reply_number = 2
-    mentions = text.split("@", reply_number)
-
-    text = ""
-    for mention in mentions:
-        temp = mention.split(" ", 1)
-        text += temp[-1] if len(temp) > 1 else ""
-
-    links = text.rsplit("https://", 3)
-    text = ""
-    for link in links:
-        temp = link.split(" ", 1)
-        text += temp[-1] if len(temp) > 1 else ""
-
-    text = " ".join(text.split())
-    print(text, len(text))
-
-
-if __name__ == "__main__":
-    main()

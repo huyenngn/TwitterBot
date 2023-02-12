@@ -1,15 +1,17 @@
 FROM python:3.10-slim-bullseye
 
-COPY bots/main.py /bots/
-COPY bots/api.py /bots/
-COPY bots/twitter.py /bots/
-COPY bots/setup.py /bots/
-COPY bots/translate.py /bots/
-COPY twitterbot-376108-554b24ce03a2.json /bots/
-COPY bots/NotoSerif-Regular.ttf /bots/
-COPY bots/thai2eng.py /bots/
+COPY bots/instagram_updates.py /bots/
+COPY bots/instagram_updates.py /bots/
+COPY twitterbot-376108-554b24ce03a2.json /bots/modules
+COPY bots/modules/twitter.py /bots/modules/
+COPY bots/modules/translate.py /bots/modules/
+COPY bots/modules/thai2eng.py /bots/modules/
+COPY bots/modules/instagram.py /bots/modules/
+COPY bots/modules/instagram.py /bots/modules/
+COPY bots/modules/helpers.py /bots/modules/
+COPY bots/modules/NotoSerif-Regular.ttf /bots/modules/
 COPY requirements.txt /tmp
 RUN pip3 install --upgrade pip -r /tmp/requirements.txt
 
 WORKDIR /bots
-CMD ["python3", "main.py"]
+CMD ["python3", "test.py"]

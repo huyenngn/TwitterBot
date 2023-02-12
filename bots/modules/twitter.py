@@ -1,9 +1,12 @@
-from setup import logger
+import logging
 import requests
 import time
 from requests_oauthlib import OAuth1Session
 import json
 import os
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 consumer_key = os.getenv("CONSUMER_KEY")
 consumer_secret = os.getenv("CONSUMER_SECRET")
@@ -18,7 +21,7 @@ def bearer_oauth(r):
     return r
 
 
-class TwitterAPI:
+class Twitter:
     def __init__(self, api=None):
         if api is None:
             self.api = OAuth1Session(
@@ -36,7 +39,7 @@ class TwitterAPI:
 
         if response.status_code != 200:
             self.error_handler(response)
-            self.get_user()
+            self.__init__(api=api)
 
         json_response = response.json()
 
@@ -44,6 +47,30 @@ class TwitterAPI:
         self.username = json_response["data"]["username"]
 
         logger.info(f"Set user data. Response code: {response.status_code}")
+
+    def error_handler(self, response):
+        logger.info(json.dumps(response.json()))
+
+        if response.status_code > 429:
+            self.wait_time = min(self.wait_time, 320)
+            logger.error(
+                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}."
+            )
+            saved = time.time()
+            while (time.time() - saved) < self.wait_time:
+                time.sleep(1)
+            self.wait_time *= 2
+        elif response.status_code >= 420:
+            limit = int(response.headers["x-rate-limit-reset"]) - time.time() + 5
+            logger.error(
+                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds."
+            )
+            saved = time.time()
+            while (time.time() - saved) < limit:
+                time.sleep(1)
+        else:
+            logger.error(f"Request returned an error: {response.status_code} {response.text}.")
+            raise Exception("Exiting.")
 
     def get_api(self):
         return self.api
@@ -57,7 +84,7 @@ class TwitterAPI:
 
         if response.status_code != 200:
             self.error_handler(response)
-            self.like(tweet_id)
+            return self.like(tweet_id)
 
         logger.info(f"Liked. Response code: {response.status_code}")
 
@@ -69,7 +96,7 @@ class TwitterAPI:
 
         if response.status_code != 200:
             self.error_handler(response)
-            self.retweet(tweet_id)
+            return self.retweet(tweet_id)
 
         logger.info(f"Retweeted. Response code: {response.status_code}")
 
@@ -126,7 +153,7 @@ class TwitterAPI:
 
         if response.status_code != 201:
             self.error_handler(response)
-            self.create_tweet(kwargs)
+            return self.create_tweet(kwargs)
 
         logger.info(f"Tweeted. Response code: {response.status_code}")
 
@@ -160,7 +187,7 @@ class TwitterAPI:
         )
         if response.status_code != 200:
             self.error_handler(response)
-            self.delete_all_rules()
+            return self.delete_all_rules()
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
 
@@ -173,9 +200,10 @@ class TwitterAPI:
             auth=bearer_oauth,
             json=payload,
         )
+
         if response.status_code != 201:
             self.error_handler(response)
-            self.set_rules()
+            return self.set_rules()
 
         logger.info(f"Set rules. Response code: {response.status_code}")
 
@@ -194,36 +222,10 @@ class TwitterAPI:
             stream=True,
         )
 
-        logger.info(f"Filtered stream. Response code: {response.status_code}")
-
         if response.status_code != 200:
             self.error_handler(response)
             return self.get_stream()
 
+        logger.info(f"Filtered stream. Response code: {response.status_code}")
+
         return response
-
-    def error_handler(self, response):
-        logger.info(json.dumps(response.json()))
-
-        if (response.status_code >= 400) and (response.status_code < 420):
-            logger.error(
-                f"Request returned an error: {response.status_code} {response.text}."
-            )
-            raise Exception("Exiting.")
-        elif (response.status_code >= 420) and (response.status_code <= 429):
-            limit = int(response.headers["x-rate-limit-reset"]) - time.time() + 5
-            logger.error(
-                f"Error (HTTP {response.status_code}): {response.text}. Reconnecting in {limit} seconds."
-            )
-            saved = time.time()
-            while (time.time() - saved) < limit:
-                time.sleep(1)
-        else:
-            self.wait_time = min(self.wait_time, 320)
-            logger.error(
-                f"Network error (HTTP {response.status_code}): {response.text}. Reconnecting {self.wait_time}."
-            )
-            saved = time.time()
-            while (time.time() - saved) < self.wait_time:
-                time.sleep(1)
-            self.wait_time *= 2

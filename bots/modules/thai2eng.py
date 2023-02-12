@@ -1,12 +1,7 @@
 import os
 from urllib.parse import urlencode
 import requests
-from io import BytesIO
-from PIL import Image, ImageFile
-from translate import img2byte
-
-
-ImageFile.LOAD_TRUNCATED_IMAGES = True
+from helpers import img2byte, byte2img
 
 api_flash_key = os.getenv("API_FLASH_KEY")
 
@@ -30,7 +25,7 @@ def get_definition(text):
     if img.status_code >= 400:
         return pages
 
-    pil_image = Image.open(BytesIO(img.content))
+    pil_image = byte2img(img.content)
     width, height = pil_image.size
     parts = (
         4 if height > 3000 else (3 if height > 2500 else (2 if height > 1500 else 1))
@@ -40,13 +35,3 @@ def get_definition(text):
         pages.append(img2byte(crop))
 
     return pages
-
-
-def main():
-    pages = get_definition("มุมะไหว ไมเกรนจะระเบิด")
-    for page in pages:
-        page.show()
-
-
-if __name__ == "__main__":
-    main()
