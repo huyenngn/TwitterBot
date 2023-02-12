@@ -1,4 +1,3 @@
 venv/
 twitterbot-376108-554b24ce03a2.json
 bots/__pycache__/
-bots/phrases.py
