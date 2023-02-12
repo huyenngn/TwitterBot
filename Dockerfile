@@ -15,4 +15,4 @@ COPY requirements.txt /tmp
 RUN pip3 install --upgrade pip -r /tmp/requirements.txt
 
 WORKDIR /bots
-CMD ["python3", "src/test.py"]
+CMD ["python3", "test.py"]
