@@ -1,7 +1,7 @@
 import os
 from urllib.parse import urlencode
 import requests
-from helpers import img2byte, byte2img
+from modules.util import img2byte, byte2img
 
 api_flash_key = os.getenv("API_FLASH_KEY")
 
