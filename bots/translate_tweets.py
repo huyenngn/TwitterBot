@@ -2,9 +2,9 @@ import json
 import logging
 import threading
 import time
-from bots.modules.thai2eng import get_definition
-from bots.modules.twitter import Twitter
-from bots.modules.translate import Translator
+from modules.thai2eng import get_definition
+from modules.twitter import Twitter
+from modules.translate import Translator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
