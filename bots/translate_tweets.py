@@ -122,7 +122,7 @@ class TranslateTweetsBot(Twitter):
                 translated_images.append(str(media_id))
 
         new_tweet = self.send_tweet(
-            username, translation, tweet_id, translated_images, reference
+            username, translation, tweet_id, translated_images, reference=reference
         )
         return new_tweet["data"]["id"]
 

@@ -2,7 +2,7 @@
 Collection of customizable Twitter Bots.
 
 ## Usage
-
+Single Service Bot
 ```python
 from translate_tweets import TranslateTweetsBot
 
@@ -10,7 +10,7 @@ from translate_tweets import TranslateTweetsBot
 ttb = TranslateTweetBot()
 ttb.start()
 ```
-Multiple Bots:
+Multiple Service Bot:
 ```python
 import threading
 from translate_tweets import TranslateTweetsBot
@@ -28,6 +28,7 @@ t_iub.start()
 ```
 
 ## Example
+Try out TranslateTweetsBot:
 ```bash
 sudo docker build . -t main
 ```
