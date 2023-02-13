@@ -32,12 +32,10 @@ class Translator:
             translation = translation.replace(src, dst)
 
         detected = self.google.detect(text)
-        if detected.lang == self.dst:
-            if detected.confidence > 0.2:
-                return ""
-            translation = self.google.translate(translation, src=self.src, dst=self.dst).text
-        else:
-            translation = self.google.translate(translation, dst=self.dst).text
+        if detected.lang != self.src and detected.confidence > 0.2:
+            return ""
+
+        translation = self.google.translate(translation, src=self.src, dst=self.dst).text
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
@@ -63,7 +61,6 @@ class Translator:
                             w.append(symbol.text)
                         p.append("".join(w))
                     text = " ".join(p)
-                    print("meow")
                     text = self.translate_text(text)
 
                     if not text:
@@ -86,11 +83,11 @@ class Translator:
                     )
 
                     fontsize = 13
-                    font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
+                    font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                     textsize = font.getsize_multiline(text)
                     while textsize[0] < poly_width and textsize[1] < poly_height:
                         fontsize += 1
-                        font = ImageFont.truetype("NotoSerif-Regular.ttf", fontsize)
+                        font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                         textsize = font.getsize_multiline(text)
 
                     bbox = draw.multiline_textbbox(poly[0], text, font=font)
