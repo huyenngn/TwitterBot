@@ -139,11 +139,12 @@ class TranslateTweetsBot(Twitter):
                     (text, username, tweet_id, parent_id, image_urls, tweet_type) = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
-                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
-                    self.retweet(tweet_id)
-                    if len(text) > 15:
-                        tweet_id = self.explanation_tweet(text, tweet_id)
-                    if parent_id and tweet_type != "retweeted":
+                    if tweet_type != "retweeted":
+                        tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
+                        self.retweet(tweet_id)
+                        if len(text) > 15:
+                            tweet_id = self.explanation_tweet(text, tweet_id)
+                    if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, image_urls, z = self.get_data(parent)
                         if parentname not in self.biases:

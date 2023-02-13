@@ -32,10 +32,10 @@ class Translator:
             translation = translation.replace(src, dst)
 
         detected = self.google.detect(text)
-        if detected.lang != self.src and detected.confidence > 0.2:
+        if detected.lang != self.src and detected.confidence < 0.2:
             return ""
 
-        translation = self.google.translate(translation, src=self.src, dst=self.dst).text
+        translation = self.google.translate(translation, dst=self.dst).text
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
