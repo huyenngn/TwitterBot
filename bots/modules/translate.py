@@ -1,7 +1,7 @@
 from io import BytesIO
 import logging
 import os
-from bots.modules.util import img2byte
+from util import img2byte
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator as GT
 from google.cloud import vision
@@ -28,12 +28,14 @@ class Translator:
             return ""
 
         detected = self.google.detect(text)
-        if detected.lang[0] == self.dst:
+        print(detected.lang)
+        if detected.lang == self.dst:
             if detected.confidence > 0.2:
                 return ""
             lang = self.src
         else:
-            lang = detected.lang[0]
+            lang = detected.lang
+        print(lang)
 
         translation = text
         for src, dst in self.glossary.items():
@@ -41,7 +43,7 @@ class Translator:
 
         translation = self.google.translate(
             translation,
-            src=lang,
+            src=str(lang),
             dst=self.dst,
         ).text
 
@@ -69,6 +71,7 @@ class Translator:
                             w.append(symbol.text)
                         p.append("".join(w))
                     text = " ".join(p)
+                    print("meow")
                     text = self.translate_text(text)
 
                     if not text:
@@ -104,3 +107,12 @@ class Translator:
         pil_image.show()
 
         return img2byte(pil_image)
+
+
+def main():
+    tl = Translator("th", "en")
+    tl.translate_image("https://pbs.twimg.com/media/Fo2MkrCaMAALcA9?format=jpg&name=360x360")
+
+
+if __name__ == "__main__":
+    main()
