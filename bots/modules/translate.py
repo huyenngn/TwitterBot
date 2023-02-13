@@ -1,7 +1,7 @@
 from io import BytesIO
 import logging
 import os
-from util import img2byte
+from bots.modules.util import img2byte
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator as GT
 from google.cloud import vision
