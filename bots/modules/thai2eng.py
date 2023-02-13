@@ -2,7 +2,7 @@ from io import BytesIO
 import os
 from urllib.parse import urlencode
 import requests
-from modules.util import img2byte
+from bots.modules.util import img2byte
 from PIL import Image
 
 api_flash_key = os.getenv("API_FLASH_KEY")

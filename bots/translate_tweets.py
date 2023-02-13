@@ -2,39 +2,26 @@ import json
 import logging
 import threading
 import time
-from modules.thai2eng import get_definition
-from modules.twitter import Twitter
-from modules.translate import Translator
+from bots.modules.thai2eng import get_definition
+from bots.modules.twitter import Twitter
+from bots.modules.translate import Translator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-bot_settings = {
-    # twitter user the bot will automatically interact with
-    "biases": ["srchafreen", "AngelssBecky"],
-    # test users and admins
-    "admins": ["FreenBeckyBot", "srchafreen", "AngelssBecky"],
-    # twitter users and their respective emoji/alias
-    # this could be accounts your biases regularily interact with
-    # (including your biases)
-    "twitter_handles": {
-        "srchafreen": "\ud83d\udc30",
-        "AngelssBecky": "\ud83e\udda6",
-        "namorntaraaa": "\ud83d\udea2",
-        "GAPtheseries": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
-    },
-}
-
 
 class TranslateTweetsBot(Twitter):
-    def __init__(self, api=None):
-        self.tl = Translator()
+    def __init__(self, biases, src, dst, glossary={}, corrections={}, admins=[], handles={}, api=None):
+        self.tl = Translator(src=src, dst=dst, glossary=glossary, corrections=corrections)
         self.last_response_time = None
+        self.biases = biases
+        self.admins = admins
+        self.handles = handles
         super().__init__(api)
 
     def create_rules(self):
         rule = "("
-        for bias in bot_settings["biases"]:
+        for bias in self.biases:
             rule += "from:" + bias + " OR "
         rule = rule[:-4] + ")"
 
@@ -83,29 +70,15 @@ class TranslateTweetsBot(Twitter):
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
 
-        return (
-            " ".join(text.split()),
-            username,
-            tweet_id,
-            parent_id,
-            image_urls,
-            tweet_type,
-        )
+        return (" ".join(text.split()), username, tweet_id, parent_id, image_urls, tweet_type)
 
     def send_tweet(self, username, text, tweet_id, medias, *, reference=None):
         translation = ""
-        if username in bot_settings["twitter_handles"].keys():
-            translation += bot_settings["twitter_handles"][username] + ": "
+        if username in self.handles.keys():
+            translation += self.handles[username] + ": "
         translation += text
         if reference is not None:
-            translation = (
-                "["
-                + bot_settings["twitter_handles"][reference[1]]
-                + " "
-                + reference[0]
-                + "] "
-                + translation
-            )
+            translation = ("[" + self.handles[reference[1]] + " " + reference[0] + "] " + translation)
 
         translation = translation.replace("#", "#.")
 
@@ -114,27 +87,44 @@ class TranslateTweetsBot(Twitter):
             last_part = translation[247:].split(" ", 1)
             first_part = translation[:247] + last_part[0] + "..."
             if medias:
-                new_tweet = self.create_tweet(
-                    text=first_part, in_reply_to_tweet_id=reply_id, media_ids=medias
-                )
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(
-                    text=first_part, in_reply_to_tweet_id=reply_id
-                )
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id)
             reply_id = new_tweet["data"]["id"]
             translation = "..." + last_part[-1]
             self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
         else:
             if medias:
-                new_tweet = self.create_tweet(
-                    text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias
-                )
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(
-                    text=translation, in_reply_to_tweet_id=reply_id
-                )
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
 
         return new_tweet
+
+    def explanation_tweet(self, text, tweet_id):
+        definitions = get_definition(text)
+        translated_images = []
+        for definition in definitions:
+            media_id = self.create_media(definition)["media_id"]
+            translated_images.append(str(media_id))
+        new_tweet = self.send_tweet(
+            "", "explanation:", tweet_id, translated_images
+        )
+        return new_tweet["data"]["id"]
+
+    def translation_tweet(self, text, username, tweet_id, image_urls, reference):
+        translation = self.tl.translate_text(text)
+        translated_images = []
+        if image_urls:
+            for url in image_urls:
+                raw_image = self.tl.translate_image(url)
+                media_id = self.create_media(raw_image)["media_id"]
+                translated_images.append(str(media_id))
+
+        new_tweet = self.send_tweet(
+            username, translation, tweet_id, translated_images, reference
+        )
+        return new_tweet["data"]["id"]
 
     def response_handler(self, response):
         for response_line in response.iter_lines():
@@ -146,96 +136,29 @@ class TranslateTweetsBot(Twitter):
                 tag = json_response["matching_rules"][0]["tag"]
 
                 if tag == "update":
-                    (
-                        text,
-                        username,
-                        tweet_id,
-                        parent_id,
-                        image_urls,
-                        tweet_type,
-                    ) = self.get_data(json_response)
+                    (text, username, tweet_id, parent_id, image_urls, tweet_type) = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
-                    if tweet_type != "retweeted":
-                        translation = self.tl.translate_text(text)
-                        translated_images = []
-                        if image_urls:
-                            for url in image_urls:
-                                raw_image = self.tl.translate_image(url)
-                                media_id = self.create_media(raw_image)["media_id"]
-                                translated_images.append(str(media_id))
-
-                        new_tweet = self.send_tweet(
-                            username, translation, tweet_id, translated_images
-                        )
-                        tweet_id = new_tweet["data"]["id"]
-                        self.retweet(tweet_id)
-                        if len(text) > 15:
-                            definitions = get_definition(text)
-                            translated_images = []
-                            for definition in definitions:
-                                media_id = self.create_media(definition)["media_id"]
-                                translated_images.append(str(media_id))
-                            new_tweet = self.send_tweet(
-                                "", "explanation:", tweet_id, translated_images
-                            )
-                            tweet_id = new_tweet["data"]["id"]
-                    if parent_id:
+                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
+                    self.retweet(tweet_id)
+                    if len(text) > 15:
+                        tweet_id = self.explanation_tweet(text, tweet_id)
+                    if parent_id and tweet_type != "retweeted":
                         parent = self.get_tweet(parent_id)
-                        text, parentname, x, y, z, a = self.get_data(parent)
-                        if parentname not in bot_settings["biases"]:
-                            translation = self.tl.translate_text(text)
-                            translated_images = []
-                            if image_urls:
-                                for url in image_urls:
-                                    raw_image = self.tl.translate_image(url)
-                                    media_id = self.create_media(raw_image)["media_id"]
-                                    translated_images.append(str(media_id))
-                            new_tweet = self.send_tweet(
-                                parentname,
-                                translation,
-                                tweet_id,
-                                translated_images,
-                                reference=(tweet_type, username),
-                            )
-                            tweet_id = new_tweet["data"]["id"]
-                            self.retweet(tweet_id)
+                        text, parentname, x, y, image_urls, z = self.get_data(parent)
+                        if parentname not in self.biases:
+                            tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, (tweet_type, username))
 
                 elif tag == "mention":
                     x, y, tweet_id, parent_id, z, a = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     logger.info(json.dumps(parent, indent=4, sort_keys=True))
-                    text, username, x, y, image_urls, z = self.get_data(parent)
-                    mentioned = False
 
-                    if ("entities" in parent["data"]) and (
-                        "mentions" in parent["data"]["entities"]
-                    ):
-                        for user in parent["data"]["entities"]["mentions"]:
-                            if self.username == user["username"]:
-                                mentioned = True
-                                break
-                    if not mentioned:
-                        translation = self.tl.translate_text(text)
-                        translated_images = []
-                        if username in bot_settings["admins"]:
-                            for url in image_urls:
-                                raw_image = self.tl.translate_image(url)
-                                media_id = self.create_media(raw_image)["media_id"]
-                                translated_images.append(str(media_id))
-                        new_tweet = self.send_tweet(
-                            username, translation, tweet_id, translated_images
-                        )
-                        tweet_id = new_tweet["data"]["id"]
-                        if len(text) > 15:
-                            definitions = get_definition(text)
-                            translated_images = []
-                            for definition in definitions:
-                                media_id = self.create_media(definition)["media_id"]
-                                translated_images.append(str(media_id))
-                            new_tweet = self.send_tweet(
-                                "", "explanation:", tweet_id, translated_images
-                            )
+                    text, username, x, y, image_urls, z = self.get_data(parent)
+
+                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
+                    if len(text) > 15:
+                        self.explanation_tweet(text, tweet_id)
 
     def start(self):
         response = self.get_stream()

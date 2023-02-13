@@ -1,7 +1,7 @@
 from io import BytesIO
 import logging
 import os
-from modules.util import img2byte
+from bots.modules.util import img2byte
 from PIL import Image, ImageDraw, ImageFont
 from googletrans import Translator as GT
 from google.cloud import vision
@@ -13,59 +13,22 @@ logger = logging.getLogger(__name__)
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = os.getenv("GCLOUD_ID")
 
-translation_settings = {
-    # language settings
-    "src": "th",
-    "dst": "en",
-    # replacements applied before translating
-    "glossary": {
-        "อะะ": " ahh",
-        "ง้อ": "reconcile",
-        "งอน": "sulking",
-        "คนรัก": "คนที่รัก",  # people to love
-        "มามี้": "Mami",
-        "ยัก": "รัก",  # yak
-        "ฟรีนกี้": "Freenky",
-        "ฟรีน": "Freen",
-        "สาม": "แซม",  # Sam
-        "นุคน": "หนู",  # Nu -> Sandra
-        "นุ": "หนู",
-        "หนู": "แซนดร้า",
-        "น้องพุง": "Nong Belly",
-        "น้อง": "Nong",
-        "พี่": "Phi",
-        "ยัง": "",  # still/yet
-        "อะ": "",  # a
-    },
-    # replacements applied after translating
-    "corrections": {
-        "Sandra": "Nu",
-        "Beck ": "Bec",
-        "I am": "",
-        "I'm ": "",
-        "I ": "",
-        " me ": " me/you ",
-        " me.": " me/you.",
-        "boyfriend": "girlfriend",
-    },
-}
-
 
 class Translator:
-    def __init__(self):
+    def __init__(self, src, dst, glossary={}, corrections={}):
         self.vision = vision.ImageAnnotatorClient()
         self.google = GT()
-        self.glossary = translation_settings["glossary"]
-        self.corrections = translation_settings["corrections"]
-        self.src = translation_settings["src"]
-        self.dst = translation_settings["dst"]
+        self.glossary = glossary
+        self.corrections = corrections
+        self.src = src
+        self.dst = dst
 
     def translate_text(self, text):
         if not text:
             return ""
 
         detected = self.google.detect(text)
-        if detected.lang == "en":
+        if detected.lang == self.dst:
             if detected.confidence > 0.2:
                 return ""
             lang = self.src
