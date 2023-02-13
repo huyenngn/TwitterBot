@@ -15,7 +15,7 @@ gcloud_id = os.getenv("GCLOUD_ID")
 
 
 class Translator:
-    def __init__(self, src, dst, glossary={}, corrections={}):
+    def __init__(self, src: str, dst: str, glossary={}, corrections={}):
         self.vision = vision.ImageAnnotatorClient()
         self.google = GT()
         self.glossary = glossary
@@ -28,12 +28,12 @@ class Translator:
             return ""
 
         detected = self.google.detect(text)
-        if detected.lang == self.dst:
+        if detected.lang[0] == self.dst:
             if detected.confidence > 0.2:
                 return ""
             lang = self.src
         else:
-            lang = detected.lang
+            lang = detected.lang[0]
 
         translation = text
         for src, dst in self.glossary.items():
