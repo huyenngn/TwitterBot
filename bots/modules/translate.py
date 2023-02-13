@@ -27,25 +27,17 @@ class Translator:
         if not text:
             return ""
 
-        detected = self.google.detect(text)
-        print(detected.lang)
-        if detected.lang == self.dst:
-            if detected.confidence > 0.2:
-                return ""
-            lang = self.src
-        else:
-            lang = detected.lang
-        print(lang)
-
         translation = text
         for src, dst in self.glossary.items():
             translation = translation.replace(src, dst)
 
-        translation = self.google.translate(
-            translation,
-            src=str(lang),
-            dst=self.dst,
-        ).text
+        detected = self.google.detect(text)
+        if detected.lang == self.dst:
+            if detected.confidence > 0.2:
+                return ""
+            translation = self.google.translate(translation, src=self.src, dst=self.dst).text
+        else:
+            translation = self.google.translate(translation, dst=self.dst).text
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
