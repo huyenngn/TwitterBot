@@ -49,7 +49,7 @@ class TranslateTweetsBot(Twitter):
         if tweet_type == "replied_to":
             reply_number = len(json_response["includes"]["users"]) - 1
             mentions = text.split("@", reply_number)
-
+            text = ""
             for mention in mentions:
                 temp = mention.split(" ", 1)
                 text += temp[-1] if len(temp) > 1 else ""

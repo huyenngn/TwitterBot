@@ -27,16 +27,14 @@ class Translator:
         if not text:
             return ""
 
-        translation = text
+        t = text
         for src, dst in self.glossary.items():
-            translation = translation.replace(src, dst)
+            t = t.replace(src, dst)
 
-        response = self.google.translate(translation, src=self.src, dst=self.dst).text
+        translation = self.google.translate(t, src=self.src, dst=self.dst).text
 
-        if response == translation:
+        if t == translation:
             return ""
-
-        translation = response
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
