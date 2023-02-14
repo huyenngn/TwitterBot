@@ -31,11 +31,10 @@ class Translator:
         for src, dst in self.glossary.items():
             translation = translation.replace(src, dst)
 
-        response = self.google.translate(translation, dst=self.dst)
-        if response.src != self.src:
-            return ""
+        response = self.google.translate(translation, dst=self.dst).text
 
-        translation = response.text
+        if response == translation:
+            return ""
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
