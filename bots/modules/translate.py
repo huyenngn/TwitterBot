@@ -31,7 +31,7 @@ class Translator:
         for src, dst in self.glossary.items():
             translation = translation.replace(src, dst)
 
-        response = self.google.translate(translation, dst=self.dst).text
+        response = self.google.translate(translation, src=self.src, dst=self.dst).text
 
         if response == translation:
             return ""
