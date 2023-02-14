@@ -50,7 +50,7 @@ class TranslateTweetsBot(Twitter):
             mentions = text.split("@", reply_number)
 
             text = ""
-            for mention in mentions:
+            for mention in mentions[1:]:
                 temp = mention.split(" ", 1)
                 text += temp[-1] if len(temp) > 1 else ""
 
@@ -63,7 +63,7 @@ class TranslateTweetsBot(Twitter):
 
             links = text.rsplit("https://", len(medias))
             text = ""
-            for link in links:
+            for link in links[1:]:
                 temp = link.split(" ", 1)
                 text += temp[-1] if len(temp) > 1 else ""
 
@@ -149,6 +149,8 @@ class TranslateTweetsBot(Twitter):
                         text, parentname, x, y, image_urls, z = self.get_data(parent)
                         if parentname not in self.biases:
                             tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, (tweet_type, username))
+                            if tweet_type == "retweeted":
+                                self.retweet(tweet_id)
 
                 elif tag == "mention":
                     x, y, tweet_id, parent_id, z, a = self.get_data(json_response)

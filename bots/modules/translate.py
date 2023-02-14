@@ -31,11 +31,11 @@ class Translator:
         for src, dst in self.glossary.items():
             translation = translation.replace(src, dst)
 
-        detected = self.google.detect(text)
-        if detected.lang != self.src and detected.confidence < 0.2:
+        response = self.google.translate(translation, dst=self.dst)
+        if response.src != self.src:
             return ""
 
-        translation = self.google.translate(translation, dst=self.dst).text
+        translation = response.text
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
@@ -96,12 +96,3 @@ class Translator:
         pil_image.show()
 
         return img2byte(pil_image)
-
-
-def main():
-    tl = Translator("th", "en")
-    tl.translate_image("https://pbs.twimg.com/media/Fo2MkrCaMAALcA9?format=jpg&name=360x360")
-
-
-if __name__ == "__main__":
-    main()
