@@ -36,6 +36,8 @@ class Translator:
         if response == translation:
             return ""
 
+        translation = response
+
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
 
