@@ -105,7 +105,7 @@ class Twitter:
             "https://api.twitter.com/2/tweets/{}".format(tweet_id),
             params={
                 "expansions": "author_id,attachments.media_keys,entities.mentions.username",
-                "tweet.fields": "referenced_tweets,entities",
+                "tweet.fields": "referenced_tweets,entities,reply_settings",
                 "media.fields": "url,type",
                 "user.fields": "username",
             },
@@ -140,9 +140,14 @@ class Twitter:
         media = ["media_ids"]
         for key, value in kwargs.items():
             if key in reply:
-                payload["reply"] = {key: value}
+                if "reply" not in payload.keys():
+                    payload["reply"] = {}
+                payload["reply"][key] = value
             elif key in media:
-                payload["media"] = {key: value}
+                if value:
+                    if "media" not in payload.keys():
+                        payload["reply"] = {}
+                    payload["media"][key] = value
             else:
                 payload[key] = value
 
@@ -214,7 +219,7 @@ class Twitter:
             "https://api.twitter.com/2/tweets/search/stream",
             params={
                 "expansions": "author_id,attachments.media_keys,entities.mentions.username",
-                "tweet.fields": "referenced_tweets,entities",
+                "tweet.fields": "referenced_tweets,entities,reply_settings",
                 "media.fields": "url,type",
                 "user.fields": "username",
             },

@@ -26,7 +26,7 @@ class TranslateTweetsBot(Twitter):
         rule = rule[:-4] + ")"
 
         rules = [
-            {"value": "\"@" + self.username + " tl\" is:reply -to:" + self.username + " -is:retweet", "tag": "mention"},
+            {"value": "\"@" + self.username + " tl\" is:reply -to:" + self.username + " -from:" + self.username + " -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
         ]
         return rules
@@ -70,10 +70,11 @@ class TranslateTweetsBot(Twitter):
 
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
+        reply_settings = json_response["reply_settings"]
 
-        return (" ".join(text.split()), username, tweet_id, parent_id, image_urls, tweet_type)
+        return (" ".join(text.split()), username, tweet_id, parent_id, image_urls, tweet_type, reply_settings)
 
-    def send_tweet(self, username, text, tweet_id, medias, *, reference=None):
+    def send_tweet(self, username, text, tweet_id, medias, reference, reply_settings):
         translation = ""
         if username in self.handles.keys():
             translation += self.handles[username] + ": "
@@ -86,17 +87,17 @@ class TranslateTweetsBot(Twitter):
         last_part = translation[250:].split(" ", 1)
         if len(last_part) > 1:
             first_part = translation[:250] + last_part[0] + "..."
-            if medias:
+            if reply_settings == "everyone":
                 new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=tweet_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=tweet_id)
+                new_tweet = self.create_tweet(text=first_part, quote_tweet_id=tweet_id, media_ids=medias)
             translation = "..." + last_part[-1]
             self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
         else:
-            if medias:
+            if reply_settings == "everyone":
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
+                new_tweet = self.create_tweet(text=translation, quote_tweet_id=tweet_id, media_ids=medias)
 
         return new_tweet
 
@@ -107,11 +108,11 @@ class TranslateTweetsBot(Twitter):
             media_id = self.create_media(definition)["media_id"]
             translated_images.append(str(media_id))
         new_tweet = self.send_tweet(
-            "", "explanation:", tweet_id, translated_images
+            "", "explanation:", tweet_id, translated_images, None, "everyone"
         )
         return new_tweet["data"]["id"]
 
-    def translation_tweet(self, text, username, tweet_id, image_urls, reference):
+    def translation_tweet(self, text, username, tweet_id, image_urls, *, reference=None, reply_settings="everyone"):
         translation = self.tl.translate_text(text)
         translated_images = []
         if image_urls:
@@ -121,7 +122,7 @@ class TranslateTweetsBot(Twitter):
                 translated_images.append(str(media_id))
 
         new_tweet = self.send_tweet(
-            username, translation, tweet_id, translated_images, reference=reference
+            username, translation, tweet_id, translated_images, reference, reply_settings
         )
         return new_tweet["data"]["id"]
 
@@ -135,30 +136,27 @@ class TranslateTweetsBot(Twitter):
                 tag = json_response["matching_rules"][0]["tag"]
 
                 if tag == "update":
-                    (text, username, tweet_id, parent_id, image_urls, tweet_type) = self.get_data(json_response)
+                    (text, username, tweet_id, parent_id, image_urls, tweet_type, reply_settings) = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
-                    if tweet_type != "retweeted":
-                        tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
-                        self.retweet(tweet_id)
-                        if len(text) > 15:
-                            tweet_id = self.explanation_tweet(text, tweet_id)
-                    if parent_id:
+                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
+                    self.retweet(tweet_id)
+                    if len(text) > 15:
+                        tweet_id = self.explanation_tweet(text, tweet_id)
+                    if parent_id and tweet_type != "retweeted":
                         parent = self.get_tweet(parent_id)
-                        text, parentname, x, y, image_urls, z = self.get_data(parent)
+                        text, parentname, x, y, image_urls, z, a = self.get_data(parent)
                         if parentname not in self.biases:
-                            tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, (tweet_type, username))
-                            if tweet_type == "retweeted":
-                                self.retweet(tweet_id)
+                            tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, reference=(tweet_type, username))
 
                 elif tag == "mention":
-                    x, y, tweet_id, parent_id, z, a = self.get_data(json_response)
+                    x, y, tweet_id, parent_id, z, a, reply_settings = self.get_data(json_response)
                     parent = self.get_tweet(parent_id)
                     logger.info(json.dumps(parent, indent=4, sort_keys=True))
 
-                    text, username, x, y, image_urls, z = self.get_data(parent)
+                    text, username, x, y, image_urls, z, a = self.get_data(parent)
 
-                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, None)
+                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
                     if len(text) > 15:
                         self.explanation_tweet(text, tweet_id)
 
