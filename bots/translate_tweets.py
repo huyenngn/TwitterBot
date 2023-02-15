@@ -83,22 +83,20 @@ class TranslateTweetsBot(Twitter):
 
         translation = translation.replace("#", "#.")
 
-        reply_id = tweet_id
-        if 250 < len(translation):
-            last_part = translation[247:].split(" ", 1)
-            first_part = translation[:247] + last_part[0] + "..."
+        last_part = translation[250:].split(" ", 1)
+        if len(last_part) > 1:
+            first_part = translation[:250] + last_part[0] + "..."
             if medias:
-                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id, media_ids=medias)
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=tweet_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=reply_id)
-            reply_id = new_tweet["data"]["id"]
+                new_tweet = self.create_tweet(text=first_part, in_reply_to_tweet_id=tweet_id)
             translation = "..." + last_part[-1]
-            self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+            self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
         else:
             if medias:
-                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id, media_ids=medias)
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id, media_ids=medias)
             else:
-                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=reply_id)
+                new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id)
 
         return new_tweet
 
