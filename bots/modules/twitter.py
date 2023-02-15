@@ -146,7 +146,7 @@ class Twitter:
             elif key in media:
                 if value:
                     if "media" not in payload.keys():
-                        payload["reply"] = {}
+                        payload["media"] = {}
                     payload["media"][key] = value
             else:
                 payload[key] = value
