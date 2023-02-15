@@ -70,7 +70,7 @@ class TranslateTweetsBot(Twitter):
 
         username = json_response["includes"]["users"][0]["username"]
         tweet_id = json_response["data"]["id"]
-        reply_settings = json_response["reply_settings"]
+        reply_settings = json_response["data"]["reply_settings"]
 
         return (" ".join(text.split()), username, tweet_id, parent_id, image_urls, tweet_type, reply_settings)
 
