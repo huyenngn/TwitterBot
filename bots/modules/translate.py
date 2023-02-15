@@ -27,14 +27,11 @@ class Translator:
         if not text:
             return ""
 
-        t = text
+        translation = text
         for src, dst in self.glossary.items():
-            t = t.replace(src, dst)
+            translation = translation.replace(src, dst)
 
-        translation = self.google.translate(t, src=self.src, dst=self.dst).text
-
-        if t == translation:
-            return ""
+        translation = self.google.translate(translation, src=self.src, dst=self.dst).text
 
         for src, dst in self.corrections.items():
             translation = translation.replace(src, dst)
@@ -59,10 +56,10 @@ class Translator:
                         for symbol in word.symbols:
                             w.append(symbol.text)
                         p.append("".join(w))
-                    text = " ".join(p)
-                    text = self.translate_text(text)
+                    para = " ".join(p)
+                    text = self.translate_text(para)
 
-                    if not text:
+                    if para == text:
                         continue
 
                     text = text.replace(", ", ",\n")
