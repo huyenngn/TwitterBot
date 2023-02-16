@@ -39,7 +39,7 @@ class TranslateTweetsBot(Twitter):
             tweet_type = ""
             parent_id = ""
 
-        text = " " + json_response["data"]["text"] + " "
+        text = " " + json_response["data"]["text"].encode('utf-16', 'surrogatepass').decode('utf-16', 'surrogatepass') + " "
         if tweet_type == "quoted":
             parts = text.rsplit("https://", 1)
             tail = parts[-1].split(" ", 1)
@@ -141,8 +141,7 @@ class TranslateTweetsBot(Twitter):
                     self.retweet(tweet_id)
                     tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
                     self.retweet(tweet_id)
-                    if len(text) > 15:
-                        tweet_id = self.explanation_tweet(text, tweet_id)
+                    tweet_id = self.explanation_tweet(text, tweet_id)
                     if parent_id and tweet_type != "retweeted":
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, image_urls, z, a = self.get_data(parent)
@@ -157,8 +156,7 @@ class TranslateTweetsBot(Twitter):
                     text, username, x, y, image_urls, z, a = self.get_data(parent)
 
                     tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
-                    if len(text) > 15:
-                        self.explanation_tweet(text, tweet_id)
+                    self.explanation_tweet(text, tweet_id)
 
     def start(self):
         response = self.get_stream()
