@@ -92,7 +92,7 @@ class TranslateTweetsBot(Twitter):
             else:
                 new_tweet = self.create_tweet(text=first_part, quote_tweet_id=tweet_id, media_ids=medias)
             translation = "..." + last_part[-1]
-            self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
+            new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
         else:
             if reply_settings == "everyone":
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id, media_ids=medias)
