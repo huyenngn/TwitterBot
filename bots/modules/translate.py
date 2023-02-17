@@ -73,7 +73,7 @@ class Translator:
                     poly_height = abs(poly[0][1] - poly[2][1])
 
                     para = text.split(" ")
-                    number_of_lines = 1 + int((len(para)/2)*(poly_height/poly_width))
+                    number_of_lines = 1 + int((len(para)/3)*(poly_height/poly_width))
                     print(number_of_lines)
                     if number_of_lines > 1:
                         line_size = int(len(para)/number_of_lines)
@@ -88,7 +88,7 @@ class Translator:
                     fontsize = 13
                     font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                     bbox = draw.multiline_textbbox(poly[0], text, font=font)
-                    while abs(bbox[0] - bbox[2]) < poly_width and (bbox[1] - bbox[3]) < poly_height:
+                    while abs(bbox[0] - bbox[2]) < poly_width and abs(bbox[1] - bbox[3]) < poly_height:
                         fontsize += 1
                         font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                         bbox = draw.multiline_textbbox(poly[0], text, font=font)

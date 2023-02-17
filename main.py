@@ -69,8 +69,10 @@ def main():
     # rules = ttb.create_rules()
     # ttb.delete_all_rules()
     # ttb.set_rules(rules)
-    t_ttb = threading.Thread(target=ttb.start)
-    t_ttb.start()
+    # t_ttb = threading.Thread(target=ttb.start)
+    # t_ttb.start()
+    ttb.tl.translate_image("https://pbs.twimg.com/media/FoW5YZ-akAAIK-T?format=jpg&name=large")
+
     # api = ttb.get_api()
     # iub = InstagramUpdatesBot(api=api)
     # t_iub = threading.Thread(target=iub.start)
