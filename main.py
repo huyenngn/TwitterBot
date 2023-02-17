@@ -66,9 +66,9 @@ def main():
         admins=bot_settings["admins"],
         handles=bot_settings["twitter_handles"]
         )
-    # rules = ttb.create_rules()
-    # ttb.delete_all_rules()
-    # ttb.set_rules(rules)
+    rules = ttb.create_rules()
+    ttb.delete_all_rules()
+    ttb.set_rules(rules)
     t_ttb = threading.Thread(target=ttb.start)
     t_ttb.start()
     # api = ttb.get_api()

@@ -28,6 +28,7 @@ class TranslateTweetsBot(Twitter):
         rules = [
             {"value": "\"@" + self.username + " tl\" is:reply -to:" + self.username + " -from:" + self.username + " -is:retweet", "tag": "mention"},
             {"value": rule, "tag": "update"},
+            {"value": "t35t from:FreenBeckybot -is:retweet -is:reply", "tag": "update"}
         ]
         return rules
 
@@ -92,7 +93,7 @@ class TranslateTweetsBot(Twitter):
             else:
                 new_tweet = self.create_tweet(text=first_part, quote_tweet_id=tweet_id, media_ids=medias)
             translation = "..." + last_part[-1]
-            new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
+            self.create_tweet(text=translation, in_reply_to_tweet_id=new_tweet["data"]["id"])
         else:
             if reply_settings == "everyone":
                 new_tweet = self.create_tweet(text=translation, in_reply_to_tweet_id=tweet_id, media_ids=medias)
@@ -139,14 +140,18 @@ class TranslateTweetsBot(Twitter):
                     (text, username, tweet_id, parent_id, image_urls, tweet_type, reply_settings) = self.get_data(json_response)
                     self.like(tweet_id)
                     self.retweet(tweet_id)
-                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
-                    self.retweet(tweet_id)
-                    tweet_id = self.explanation_tweet(text, tweet_id)
-                    if parent_id and tweet_type != "retweeted":
+                    if tweet_type != "retweeted":
+                        tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
+                        self.retweet(tweet_id)
+                        tweet_id = self.explanation_tweet(text, tweet_id)
+                    if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, image_urls, z, a = self.get_data(parent)
                         if parentname not in self.biases:
                             tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, reference=(tweet_type, username))
+                            if tweet_type == "retweeted":
+                                self.retweet(tweet_id)
+                                tweet_id = self.explanation_tweet(text, tweet_id)
 
                 elif tag == "mention":
                     x, y, tweet_id, parent_id, z, a, reply_settings = self.get_data(json_response)
