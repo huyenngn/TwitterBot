@@ -6,7 +6,7 @@ bot_settings = {
     # twitter user the bot will automatically interact with
     "biases": ["srchafreen", "AngelssBecky"],
     # test users and admins
-    "admins": ["FreenBeckyBot", "srchafreen", "AngelssBecky", "joohwangblink"],
+    "admins": ["FreenBeckyBot", "joohwangblink"],
     # twitter users and their respective emoji/alias
     # this could be accounts your biases regularily interact with
     # (including your biases)
