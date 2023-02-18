@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 import time
-from bots.modules.thai2eng import get_definition
+from bots.modules.thai2eng import Thai2Eng
 from bots.modules.twitter import Twitter
 from bots.modules.translate import Translator
 
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class TranslateTweetsBot(Twitter):
     def __init__(self, biases, src, dst, glossary={}, corrections={}, admins=[], handles={}, api=None):
         self.tl = Translator(src=src, dst=dst, glossary=glossary, corrections=corrections)
+        self.t2e = Thai2Eng()
         self.last_response_time = None
         self.biases = biases
         self.admins = admins
@@ -103,7 +104,7 @@ class TranslateTweetsBot(Twitter):
         return new_tweet
 
     def explanation_tweet(self, text, tweet_id):
-        definitions = get_definition(text)
+        definitions = self.t2e.get_definition(text)
         translated_images = []
         for definition in definitions:
             media_id = self.create_media(definition)["media_id"]
