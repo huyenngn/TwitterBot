@@ -57,42 +57,42 @@ class Translator:
                         for symbol in word.symbols:
                             w.append(symbol.text)
                         p.append("".join(w))
-                    para = " ".join(p)
+                    para = "".join(p)
                     text = self.translate_text(para)
 
-                    if para.lower().replace(" ", "") == text.lower().replace(" ", ""):
+                    if para.lower() == text.lower():
                         continue
 
                     poly = []
                     for vertex in paragraph.bounding_box.vertices:
-                        p = (vertex.x, vertex.y)
-                        poly.append(p)
+                        v = (vertex.x, vertex.y)
+                        poly.append(v)
                     draw.polygon(poly, fill=(255, 255, 255))
 
                     poly_width = abs(poly[0][0] - poly[2][0])
                     poly_height = abs(poly[0][1] - poly[2][1])
 
-                    para = text.split(" ")
-                    number_of_lines = 1 + int((len(para)/3)*(poly_height/poly_width))
-                    print(number_of_lines)
-                    if number_of_lines > 1:
-                        line_size = int(len(para)/number_of_lines)
-                        temp = []
-                        for i in range(1, number_of_lines):
-                            start = (i-1) * line_size
-                            end = i * line_size
-                            temp.append(" ".join(para[start:end]))
-                        temp.append(" ".join(para[end:]))
-                        text = "\n".join(temp)
+                    p = text.split()
+                    number_of_lines = int(1 + (len(p)/10)*(poly_height/poly_width))
+                    line_size = min(10, int(len(p)/number_of_lines))
+                    # print("w: ", poly_width, "h: ", poly_height, "l: ", len(p), "n: ", number_of_lines, "s: ", line_size)
+                    # print(p)
+                    temp = []
+                    for i in range(0, number_of_lines):
+                        start = i * line_size
+                        end = (i+1) * line_size
+                        temp.append(" ".join(p[start:end]))
+                    temp.append(" ".join(p[end:]))
+                    text = "\n".join(temp)
 
-                    fontsize = 13
+                    fontsize = int(pil_image.size[0]/70)
                     font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                     bbox = draw.multiline_textbbox(poly[0], text, font=font)
                     while abs(bbox[0] - bbox[2]) < poly_width and abs(bbox[1] - bbox[3]) < poly_height:
                         fontsize += 1
                         font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
                         bbox = draw.multiline_textbbox(poly[0], text, font=font)
-
+                    print(fontsize)
                     draw.rectangle(bbox, fill=(255, 255, 255))
                     draw.multiline_text(poly[0], text, (0, 0, 0), font=font)
         pil_image.show()
