@@ -71,12 +71,12 @@ def main():
         admins=bot_settings["admins"],
         handles=bot_settings["twitter_handles"]
         )
-    ttb.tl.translate_image("https://pbs.twimg.com/media/FO3yZeYVsAEfBJx?format=jpg&name=large")
+    # ttb.tl.translate_image("https://pbs.twimg.com/media/FO3yZeYVsAEfBJx?format=jpg&name=large")
     # rules = ttb.create_rules()
     # ttb.delete_all_rules()
     # ttb.set_rules(rules)
-    # t_ttb = threading.Thread(target=ttb.start)
-    # t_ttb.start()
+    t_ttb = threading.Thread(target=ttb.start)
+    t_ttb.start()
     # api = ttb.get_api()
     # iub = InstagramUpdatesBot(api=api)
     # t_iub = threading.Thread(target=iub.start)
