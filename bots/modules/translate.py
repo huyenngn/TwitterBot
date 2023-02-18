@@ -60,7 +60,7 @@ class Translator:
                     para = " ".join(p)
                     text = self.translate_text(para)
 
-                    if para == text:
+                    if para.lower().replace(" ", "") == text.lower().replace(" ", ""):
                         continue
 
                     poly = []
