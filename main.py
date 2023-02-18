@@ -46,7 +46,7 @@ translation_settings = {
     # replacements applied after translating
     "corrections": {
         "Sandra": "Nu",
-        "Beck ": "Bec",
+        "Beck ": "Bec ",
         "I am": "",
         "I'm ": "",
         "I ": "",
