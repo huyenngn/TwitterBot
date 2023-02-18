@@ -6,7 +6,7 @@ bot_settings = {
     # twitter user the bot will automatically interact with
     "biases": ["srchafreen", "AngelssBecky"],
     # test users and admins
-    "admins": ["FreenBeckyBot", "srchafreen", "AngelssBecky"],
+    "admins": ["FreenBeckyBot", "srchafreen", "AngelssBecky", "joohwangblink"],
     # twitter users and their respective emoji/alias
     # this could be accounts your biases regularily interact with
     # (including your biases)
@@ -27,12 +27,13 @@ translation_settings = {
         "อะะ": " ahh",
         "ง้อ": "reconcile",
         "งอน": "sulking",
-        "คนรัก": "คนที่รัก",  # people to love
+        "มุมุ": "kiss kiss",
         "มามี้": "Mami",
         "ยัก": "รัก",  # yak
+        "ปีโย๊": "Piyo",
         "ฟรีนกี้": "Freenky",
         "ฟรีน": "Freen",
-        "สาม": "แซม",  # Sam
+        "คุณสาม": "คุณแซม",  # Khun Sam
         "นุคน": "หนู",  # Nu -> Sandra
         "นุ": "หนู",
         "หนู": "แซนดร้า",
@@ -52,6 +53,8 @@ translation_settings = {
         " me ": " me/you ",
         " me.": " me/you.",
         "boyfriend": "girlfriend",
+        " him ": " her ",
+        " him.": " her.",
     },
 }
 
