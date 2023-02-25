@@ -144,7 +144,7 @@ class TranslateTweetsBot(Twitter):
                     if tweet_type != "retweeted":
                         tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
                         self.retweet(tweet_id)
-                        tweet_id = self.explanation_tweet(text, tweet_id)
+                        self.explanation_tweet(text, tweet_id)
                     if parent_id:
                         parent = self.get_tweet(parent_id)
                         text, parentname, x, y, image_urls, z, a = self.get_data(parent)
@@ -152,7 +152,7 @@ class TranslateTweetsBot(Twitter):
                             tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, reference=(tweet_type, username))
                             if tweet_type == "retweeted":
                                 self.retweet(tweet_id)
-                                tweet_id = self.explanation_tweet(text, tweet_id)
+                                self.explanation_tweet(text, tweet_id)
 
                 elif tag == "mention":
                     x, y, tweet_id, parent_id, z, a, reply_settings = self.get_data(json_response)

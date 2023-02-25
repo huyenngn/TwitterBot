@@ -27,7 +27,7 @@ translation_settings = {
         "อะะ": " ahh",
         "ง้อ": "reconcile",
         "งอน": "sulking",
-        "มุมุ": "kiss kiss",
+        "มุมุ": "mumu",
         "มามี้": "Mami",
         "ยัก": "รัก",  # yak
         "ปีโย๊": "Piyo",
@@ -46,6 +46,7 @@ translation_settings = {
     # replacements applied after translating
     "corrections": {
         "Sandra": "Nu",
+        "sandra": "Nu",
         "Beck ": "Bec ",
         "I am": "",
         "I'm ": "",
