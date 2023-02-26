@@ -47,15 +47,6 @@ class TranslateTweetsBot(Twitter):
             tail = parts[-1].split(" ", 1)
             text = parts[0] + (tail[-1] if len(tail) > 1 else "")
 
-        text = " " + text + " "
-        if tweet_type == "replied_to":
-            reply_number = len(json_response["includes"]["users"]) - 1
-            mentions = text.split("@", reply_number)
-            text = ""
-            for mention in mentions:
-                temp = mention.split(" ", 1)
-                text += temp[-1] if len(temp) > 1 else ""
-
         image_urls = []
         text = " " + text + " "
         if "media" in json_response["includes"]:
@@ -64,10 +55,17 @@ class TranslateTweetsBot(Twitter):
                 if media["type"] == "photo":
                     image_urls.append(media["url"])
 
-            links = text.rsplit("https://", len(medias))
+            parts = text.rsplit("https://", 1)
+            tail = parts[-1].split(" ", 1)
+            text = parts[0] + (tail[-1] if len(tail) > 1 else "")
+
+        text = " " + text + " "
+        if tweet_type == "replied_to":
+            reply_number = len(json_response["includes"]["users"]) - 1
+            mentions = text.split("@", reply_number)
             text = ""
-            for link in links:
-                temp = link.split(" ", 1)
+            for mention in mentions:
+                temp = mention.split(" ", 1)
                 text += temp[-1] if len(temp) > 1 else ""
 
         username = json_response["includes"]["users"][0]["username"]
