@@ -33,7 +33,7 @@ class Thai2Eng:
 
         img = requests.get("https://api.apiflash.com/v1/urltoimage?" + params)
         pages = []
-        if img.status_code >= 400:
+        if img.status_code != 200:
             self.api_flash_key = os.getenv(keys[self.get_new_key()])
             if self.retries < len(keys):
                 self.retries += 1
