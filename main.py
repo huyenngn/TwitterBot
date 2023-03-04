@@ -1,5 +1,4 @@
 import threading
-# from instagram_updates import InstagramUpdatesBot
 from bots.translate_tweets import TranslateTweetsBot
 
 bot_settings = {
@@ -41,7 +40,6 @@ translation_settings = {
         "น้อง": "Nong",
         "พี่": "Phi",
         "คุณ": "Khun",
-        "ยัง": "",  # still/yet
         "อะ": "",  # a
     },
     # replacements applied after translating
@@ -79,9 +77,6 @@ def main():
     t_ttb = threading.Thread(target=ttb.start)
     t_ttb.start()
     # api = ttb.get_api()
-    # iub = InstagramUpdatesBot(api=api)
-    # t_iub = threading.Thread(target=iub.start)
-    # t_iub.start()
 
 
 if __name__ == "__main__":

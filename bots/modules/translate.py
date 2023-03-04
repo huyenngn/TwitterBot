@@ -31,7 +31,7 @@ class Translator:
         for src, dst in self.glossary.items():
             t = t.replace(src, dst)
 
-        translation = self.google.translate(t, src=self.src, dst=self.dst, service_urls=['translate.google.de',]).text
+        translation = self.google.translate(t, src=self.src, dst=self.dst).text
 
         if translation != t:
             for src, dst in self.corrections.items():
@@ -98,15 +98,3 @@ class Translator:
         pil_image.show()
 
         return img2byte(pil_image)
-
-
-def main():
-    tl = Translator("th", "en")
-    # tl.translate_image("https://pbs.twimg.com/media/FO3yZeYVsAEfBJx?format=jpg&name=large")
-    text = "\u0e21\u0e32\u0e23\u0e2d\u0e2d\u0e30\u0e22\u0e32\u0e07\u0e07\u0e07\u0e07\u0e07\ud83e\udd0f\ud83c\udffb\ud83d\udc96\n#SulwhasooxFreenBecky"
-    trans = tl.translate_text(text.encode('utf-16', 'surrogatepass').decode('utf-16', 'surrogatepass'))
-    print(trans)
-
-
-if __name__ == "__main__":
-    main()

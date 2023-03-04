@@ -5,7 +5,7 @@ import requests
 from bots.modules.util import img2byte
 from PIL import Image
 
-keys = ["API_FLASH_KEY", "API_FLASH_KEY2"]
+keys = ["API_FLASH_KEY", "API_FLASH_KEY2", "API_FLASH_KEY3"]
 
 
 class Thai2Eng:
@@ -24,7 +24,7 @@ class Thai2Eng:
                 wait_until="page_loaded",
                 width="750",
                 full_page="true",
-                js="document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelectorAll('footer')[0].setAttribute('hidden', 'true');document.querySelectorAll('form')[0].setAttribute('hidden', 'true');",
+                js="if (document.querySelector('ul').children.length == 0){document.querySelector('body').setAttribute('style', 'display: none;')} else {document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelector('footer').setAttribute('hidden', 'true');document.querySelector('form').setAttribute('hidden', 'true');};",
                 quality="100",
                 url="https://thai2english.com/?q=" + text,
             )
