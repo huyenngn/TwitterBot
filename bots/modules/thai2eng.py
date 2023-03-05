@@ -16,7 +16,7 @@ class Thai2Eng:
 
     def get_new_key(self):
         self.key = self.key + 1 if self.key < len(keys) - 1 else 0
-        return self.key
+        self.api_flash_key = os.getenv(keys[self.key])
 
     def get_definition(self, text):
         params = urlencode(
@@ -34,13 +34,13 @@ class Thai2Eng:
         img = requests.get("https://api.apiflash.com/v1/urltoimage?" + params)
         pages = []
         if img.status_code != 200:
-            self.api_flash_key = os.getenv(keys[self.get_new_key()])
+            self.get_new_key()
             if self.retries < len(keys):
                 self.retries += 1
                 return self.get_definition(text)
             else:
                 return pages
-        
+
         self.retries = 0
         pil_image = Image.open(BytesIO(img.content))
         width, height = pil_image.size

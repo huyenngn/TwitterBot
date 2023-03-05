@@ -3,8 +3,8 @@ import logging
 import os
 from bots.modules.util import img2byte
 from PIL import Image, ImageDraw, ImageFont
-from googletrans import Translator as GT
 from google.cloud import vision
+from google.cloud import translate
 import requests
 
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +17,7 @@ gcloud_id = os.getenv("GCLOUD_ID")
 class Translator:
     def __init__(self, src, dst, glossary={}, corrections={}):
         self.vision = vision.ImageAnnotatorClient()
-        self.google = GT()
+        self.google = translate.TranslationServiceClient()
         self.glossary = glossary
         self.corrections = corrections
         self.src = src
@@ -31,7 +31,19 @@ class Translator:
         for src, dst in self.glossary.items():
             t = t.replace(src, dst)
 
-        translation = self.google.translate(t, src=self.src, dst=self.dst).text
+        parent = f"projects/{gcloud_id}/locations/global"
+
+        response = self.google.translate_text(
+            request={
+                "parent": parent,
+                "contents": [text],
+                "mime_type": "text/plain",  # mime types: text/plain, text/html
+                "source_language_code": self.src,
+                "target_language_code": self.dst,
+            }
+        )
+
+        translation = response.translations[0].translated_text
 
         if translation != t:
             for src, dst in self.corrections.items():

@@ -23,8 +23,8 @@ translation_settings = {
     "dst": "en",
     # replacements applied before translating
     "glossary": {
-        "ง้อ": "reconcile",
-        "งอน": "sulk",
+        # "ง้อ": "reconcile",
+        # "งอน": "sulk",
         "มุมุ": "mumu",
         "มามี้": "Mami",
         "ยัก": "รัก",  # yak
@@ -40,7 +40,7 @@ translation_settings = {
         "น้อง": "Nong",
         "พี่": "Phi",
         "คุณ": "Khun",
-        "อะ": "",  # a
+        # "อะ": "",  # a
     },
     # replacements applied after translating
     "corrections": {
