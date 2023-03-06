@@ -36,7 +36,7 @@ class Translator:
         response = self.google.translate_text(
             request={
                 "parent": parent,
-                "contents": [text],
+                "contents": [t],
                 "mime_type": "text/plain",  # mime types: text/plain, text/html
                 "source_language_code": self.src,
                 "target_language_code": self.dst,
