@@ -50,14 +50,17 @@ class TranslateTweetsBot(Twitter):
         image_urls = []
         text = " " + text + " "
         if "media" in json_response["includes"]:
+            is_photo = False
             medias = json_response["includes"]["media"]
             for media in medias:
                 if media["type"] == "photo":
                     image_urls.append(media["url"])
-
-            parts = text.rsplit("https://", 1)
-            tail = parts[-1].split(" ", 1)
-            text = parts[0] + (tail[-1] if len(tail) > 1 else "")
+                    is_photo = True
+            
+            if is_photo:
+                parts = text.rsplit("https://", 1)
+                tail = parts[-1].split(" ", 1)
+                text = parts[0] + (tail[-1] if len(tail) > 1 else "")
 
         text = " " + text + " "
         if tweet_type == "replied_to":
