@@ -7,24 +7,24 @@ Single Service Bot
 from translate_tweets import TranslateTweetsBot
 
 # Bot that translates Tweets it's tagged under
-ttb = TranslateTweetBot()
-ttb.start()
+bot = TranslateTweetsBot()
+bot.start()
 ```
 Multiple Service Bot:
 ```python
 import threading
 from translate_tweets import TranslateTweetsBot
-from instagram_updates import InstagramUpdatesBot
+from translate_tiktoks import TranslateTikToksBot
 
 # Bot that translates Tweets it's tagged under and reposts Instagram updates to Twitter
-ttb = TranslateTweetBot()
-t_ttb = threading.Thread(target=ttb.start)
-t_ttb.start()
+bot1 = TranslateTweetsBot()
+t_bot1 = threading.Thread(target=bot1.start)
+t_bot1.start()
 
-api = ttb.getapi()
-iub = InstagramUpdatesBot(api=api)
-t_iub = threading.Thread(target=iub.start)
-t_iub.start()
+api = ttw.getapi()
+bot2 = TranslateTikToksBot(api=api)
+t_bot2 = threading.Thread(target=bot2.start)
+t_bot2.start()
 ```
 
 ## Example
@@ -42,5 +42,7 @@ docker run -d --restart always \
 -e CONSUMER_SECRET="{twitter consumer secret}" \
 -e GCLOUD_ID="{google cloud id}" \
 -e GOOGLE_APPLICATION_CREDENTIALS="{path/to/gcloud/app/creds.json}" \
--e API_FLASH_KEY="{api flash key}" main
+-e API_FLASH_KEY="{1st api flash key}" \
+-e API_FLASH_KEY2="{2nd api flash key}" \
+-e API_FLASH_KEY3="{3rd api flash key}" \ main
 ```

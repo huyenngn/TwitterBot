@@ -69,7 +69,9 @@ class Twitter:
             while (time.time() - saved) < limit:
                 time.sleep(1)
         else:
-            logger.error(f"Request returned an error: {response.status_code} {response.text}.")
+            logger.error(
+                f"Request returned an error: {response.status_code} {response.text}."
+            )
             raise Exception("Exiting.")
 
     def get_api(self):
@@ -130,6 +132,92 @@ class Twitter:
             return self.create_media(media)
 
         return response.json()
+
+    def create_video(self, media):
+        total_bytes = len(media)
+        request_data = {
+            "command": "INIT",
+            "media_type": "video/mp4",
+            "total_bytes": total_bytes,
+            "media_category": "tweet_video",
+        }
+
+        req = requests.post(
+            url="https://upload.twitter.com/1.1/media/upload.json",
+            data=request_data,
+            auth=self.api,
+        )
+
+        media_id = req.json()["media_id"]
+
+        segment_id = 0
+        bytes_sent = 0
+
+        while bytes_sent < total_bytes:
+            chunk = media[bytes_sent:(4 * 1024 * 1024)]
+
+            print("APPEND")
+
+            request_data = {
+                "command": "APPEND",
+                "media_id": media_id,
+                "segment_index": segment_id,
+            }
+
+            files = {"media": chunk}
+
+            req = requests.post(
+                url="https://upload.twitter.com/1.1/media/upload.json",
+                data=request_data,
+                files=files,
+                auth=self.api,
+            )
+
+            if req.status_code < 200 or req.status_code > 299:
+                print(req.status_code)
+                print(req.text)
+                return ""
+
+            segment_id = segment_id + 1
+            bytes_sent += 4 * 1024 * 1024
+
+        print("Upload chunks complete.")
+
+        request_data = {"command": "FINALIZE", "media_id": media_id}
+
+        req = requests.post(
+            url="https://upload.twitter.com/1.1/media/upload.json",
+            data=request_data,
+            auth=self.api,
+        )
+
+        while True:
+            processing_info = req.json().get("processing_info", None)
+
+            if processing_info is None:
+                return media_id
+
+            state = processing_info["state"]
+
+            print("Media processing status is %s " % state)
+
+            if state == "succeeded":
+                return media_id
+
+            if state == "failed":
+                return ""
+
+            check_after_secs = processing_info["check_after_secs"]
+
+            time.sleep(check_after_secs)
+
+            request_params = {"command": "STATUS", "media_id": media_id}
+
+            req = requests.get(
+                url="https://upload.twitter.com/1.1/media/upload.json",
+                params=request_params,
+                auth=self.api,
+            )
 
     def create_tweet(self, **kwargs):
         if ("text" not in kwargs) and ("media_ids" not in kwargs):

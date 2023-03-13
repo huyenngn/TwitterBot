@@ -31,7 +31,13 @@ class Translator:
         for src, dst in self.glossary.items():
             t = t.replace(src, dst)
 
-        parent = f"projects/{gcloud_id}/locations/global"
+        location = "us-central1"
+
+        # glossary = self.google.glossary_path(gcloud_id, location, "glossary")
+
+        # glossary_config = translate.TranslateTextGlossaryConfig(glossary=glossary)
+
+        parent = f"projects/{gcloud_id}/locations/{location}"
 
         response = self.google.translate_text(
             request={
@@ -40,6 +46,8 @@ class Translator:
                 "mime_type": "text/plain",  # mime types: text/plain, text/html
                 "source_language_code": self.src,
                 "target_language_code": self.dst,
+                # "glossary_config": glossary_config,
+
             }
         )
 

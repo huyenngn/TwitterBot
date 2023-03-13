@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 class TranslateTweetsBot(Twitter):
-    def __init__(self, biases, src, dst, glossary={}, corrections={}, admins=[], handles={}, api=None):
+    def __init__(self, src, dst, glossary={}, corrections={}, admins=[], handles={}, emojis={}, api=None):
         self.tl = Translator(src=src, dst=dst, glossary=glossary, corrections=corrections)
         self.t2e = Thai2Eng()
         self.last_response_time = None
-        self.biases = biases
+        self.biases = handles.keys()
         self.admins = admins
         self.handles = handles
+        self.emojis = emojis
         super().__init__(api)
 
     def create_rules(self):
@@ -78,12 +79,12 @@ class TranslateTweetsBot(Twitter):
         return (" ".join(text.split()), username, tweet_id, parent_id, image_urls, tweet_type, reply_settings)
 
     def send_tweet(self, username, text, tweet_id, medias, reference, reply_settings):
-        translation = ""
-        if username in self.handles.keys():
-            translation += self.handles[username] + ": "
-        translation += text
         if reference is not None:
-            translation = ("[" + self.handles[reference[1]] + " " + reference[0] + "] " + translation)
+            translation = ("[" + self.emojis[self.handles[reference[1]]] + " " + reference[0] + "] " + text)
+        elif username in self.biases:
+            translation = ("[" + self.emojis[self.handles[username]] + " tweeted] " + text)
+        else:
+            return
 
         translation = translation.replace("#", "#.")
 
