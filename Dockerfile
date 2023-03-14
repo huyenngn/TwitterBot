@@ -1,10 +1,6 @@
-FROM ubuntu:22.04
-RUN DEBIAN_FRONTEND=noninteractive \
-  apt-get update \
-  && apt-get install -y python3 python3-pip
+FROM python:3.10-slim-bullseye
+
 WORKDIR /usr/app
 COPY . .
-RUN pip3 install -r requirements.txt
-RUN python3 -m playwright install
-RUN playwright install-deps
+RUN pip3 install --upgrade pip -r requirements.txt
 CMD ["python3", "main.py"]

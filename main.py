@@ -1,6 +1,5 @@
 import threading
 from bots.translate_tweets import TranslateTweetsBot
-from bots.translate_tiktoks import TranslateTikToksBot
 
 bot_settings = {
     # twitter user the bot will automatically interact with
@@ -11,16 +10,10 @@ bot_settings = {
     # this could be accounts your biases regularily interact with
     # (including your biases)
     "twitter_handles": {
-        "srchafreen": "freen",
-        "AngelssBecky": "becky",
-    },
-    "tiktok_handles": {
-        "srchafreen": "freen",
-        "angelssbecky": "becky",
-    },
-    "emojis": {
-        "freen": "\ud83d\udc30",
-        "becky": "\ud83e\udda6",
+        "srchafreen": "\ud83d\udc30",
+        "AngelssBecky": "\ud83e\udda6",
+        "namorntaraaa": "\ud83d\udea2",
+        "GAPtheseries": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
     },
 }
 
@@ -68,29 +61,22 @@ translation_settings = {
 
 
 def main():
-    ttw = TranslateTweetsBot(
+    ttb = TranslateTweetsBot(
+        biases=bot_settings["biases"],
         src=translation_settings["src"],
         dst=translation_settings["dst"],
         glossary=translation_settings["glossary"],
         corrections=translation_settings["corrections"],
         admins=bot_settings["admins"],
-        handles=bot_settings["twitter_handles"],
-        emojis=bot_settings["emojis"]
+        handles=bot_settings["twitter_handles"]
         )
-    t_ttw = threading.Thread(target=ttw.start)
-    t_ttw.start()
-    api = ttw.get_api()
-    ttt = TranslateTikToksBot(
-        src=translation_settings["src"],
-        dst=translation_settings["dst"],
-        glossary=translation_settings["glossary"],
-        corrections=translation_settings["corrections"],
-        handles=bot_settings["tiktok_handles"],
-        emojis=bot_settings["emojis"],
-        api=api
-        )
-    t_ttt = threading.Thread(target=ttt.start)
-    t_ttt.start()
+    # ttb.tl.translate_image("https://pbs.twimg.com/media/FO3yZeYVsAEfBJx?format=jpg&name=large")
+    # rules = ttb.create_rules()
+    # ttb.delete_all_rules()
+    # ttb.set_rules(rules)
+    t_ttb = threading.Thread(target=ttb.start)
+    t_ttb.start()
+    # api = ttb.get_api()
 
 
 if __name__ == "__main__":
