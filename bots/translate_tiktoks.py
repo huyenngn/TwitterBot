@@ -20,7 +20,7 @@ class TranslateTikToksBot(Twitter):
         self.emojis = emojis
         self.ids = []
         for user in self.users:
-            video = user.videos(count=1)
+            video = user.videos(count=1)[0]
             self.ids.append(video.id)
         super().__init__(api)
 
