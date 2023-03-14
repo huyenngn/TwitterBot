@@ -25,7 +25,7 @@ class TranslateTikToksBot(Twitter):
         super().__init__(api)
 
     def send_tweet(self, username, text, medias):
-        translation = (self.emojis[self.handles[username]] + " tiktiok update" + text)
+        translation = (self.emojis[self.handles[username]] + " tiktiok update:\n\n" + text)
         translation = translation.replace("#", "#.")
 
         last_part = translation[250:].split(" ", 1)
@@ -39,12 +39,14 @@ class TranslateTikToksBot(Twitter):
 
     def translate_tiktok(self, username, video):
         media_id = self.create_video(video.bytes())
-        self.send_tweet(username, "", [media_id])
+        text = video.info()["video_description"]
+        text = self.tl.translate_text(text)
+        self.send_tweet(username, text, [media_id])
 
     def start(self):
         while True:
             for user in self.users:
-                video = user.videos(count=1)
+                video = user.videos(count=1)[0]
                 if video.id not in self.ids:
                     self.ids.append(video.id)
                     self.translate_tiktok(user.username, video)

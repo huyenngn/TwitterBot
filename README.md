@@ -7,7 +7,7 @@ Single Service Bot
 from translate_tweets import TranslateTweetsBot
 
 # Bot that translates Tweets it's tagged under
-bot = TranslateTweetsBot()
+bot = TranslateTweetsBot(src="th", dst="en")
 bot.start()
 ```
 Multiple Service Bot:
@@ -17,12 +17,12 @@ from translate_tweets import TranslateTweetsBot
 from translate_tiktoks import TranslateTikToksBot
 
 # Bot that translates Tweets it's tagged under and reposts Instagram updates to Twitter
-bot1 = TranslateTweetsBot()
+bot1 = TranslateTweetsBot(src="th", dst="en")
 t_bot1 = threading.Thread(target=bot1.start)
 t_bot1.start()
 
 api = ttw.getapi()
-bot2 = TranslateTikToksBot(api=api)
+bot2 = TranslateTikToksBot(src="th", dst="th", api=api)
 t_bot2 = threading.Thread(target=bot2.start)
 t_bot2.start()
 ```

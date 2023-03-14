@@ -1,3 +1,4 @@
+from io import BytesIO
 import logging
 import requests
 import time
@@ -152,11 +153,10 @@ class Twitter:
 
         segment_id = 0
         bytes_sent = 0
+        file = BytesIO(media)
 
         while bytes_sent < total_bytes:
-            chunk = media[bytes_sent:(4 * 1024 * 1024)]
-
-            print("APPEND")
+            chunk = file.read(4*1024*1024)
 
             request_data = {
                 "command": "APPEND",
@@ -177,9 +177,9 @@ class Twitter:
                 print(req.status_code)
                 print(req.text)
                 return ""
-
+            
             segment_id = segment_id + 1
-            bytes_sent += 4 * 1024 * 1024
+            bytes_sent = file.tell()
 
         print("Upload chunks complete.")
 
