@@ -20,7 +20,8 @@ class TranslateTikToksBot(Twitter):
         self.emojis = emojis
         self.ids = []
         for user in self.users:
-            video = user.videos(count=1)[0]
+            for v in user.videos(count=1):
+                video = v
             self.ids.append(video.id)
         super().__init__(api)
 
@@ -46,7 +47,8 @@ class TranslateTikToksBot(Twitter):
     def start(self):
         while True:
             for user in self.users:
-                video = user.videos(count=1)[0]
+                for v in user.videos(count=1):
+                    video = v 
                 if video.id not in self.ids:
                     self.ids.append(video.id)
                     self.translate_tiktok(user.username, video)
