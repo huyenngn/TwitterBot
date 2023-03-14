@@ -1,20 +1,4 @@
-from bots.translate_tweets import TranslateTweetsBot
-
-bot_settings = {
-    # twitter user the bot will automatically interact with
-    "biases": ["srchafreen", "AngelssBecky"],
-    # test users and admins
-    "admins": ["FreenBeckyBot", "joohwangblink"],
-    # twitter users and their respective emoji/alias
-    # this could be accounts your biases regularily interact with
-    # (including your biases)
-    "twitter_handles": {
-        "srchafreen": "\ud83d\udc30",
-        "AngelssBecky": "\ud83e\udda6",
-        "namorntaraaa": "\ud83d\udea2",
-        "GAPtheseries": "\ud83d\udc69\ud83c\udffb\u200d\u2764\ufe0f\u200d\ud83d\udc8b\u200d\ud83d\udc69\ud83c\udffb",
-    },
-}
+from bots.translate_tiktoks import TranslateTikToksBot
 
 translation_settings = {
     # language settings
@@ -58,19 +42,28 @@ translation_settings = {
     },
 }
 
+bot_settings = {
+    "tiktok_handles": {
+        "srchafreen": "freen",
+        "angelssbecky": "becky",
+    },
+    "emojis": {
+        "freen": "\ud83d\udc30",
+        "becky": "\ud83e\udda6",
+    },
+}
+
 
 def main():
-    bot = TranslateTweetsBot(
-        biases=bot_settings["biases"],
+    bot = TranslateTikToksBot(
         src=translation_settings["src"],
         dst=translation_settings["dst"],
         glossary=translation_settings["glossary"],
         corrections=translation_settings["corrections"],
-        admins=bot_settings["admins"],
-        handles=bot_settings["twitter_handles"]
+        handles=bot_settings["tiktok_handles"],
+        emojis=bot_settings["emojis"],
         )
     bot.start()
-
 
 if __name__ == "__main__":
     main()
