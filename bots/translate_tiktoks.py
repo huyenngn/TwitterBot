@@ -1,7 +1,7 @@
 import logging
 import time
 from urllib.request import urlopen
-from tiktokapipy.api import TikTokApi
+from tiktokapipy.api import TikTokAPI
 from bots.modules.twitter import Twitter
 from bots.modules.translate import Translator
 
@@ -16,7 +16,7 @@ class TranslateTikToksBot(Twitter):
         self.tl = Translator(
             src=src, dst=dst, glossary=glossary, corrections=corrections
         )
-        self.tiktok = TikTokApi()
+        self.tiktok = TikTokAPI()
         self.last_response_time = None
         self.emojis = emojis
         self.handles = handles
