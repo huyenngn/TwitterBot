@@ -1,7 +1,7 @@
 import logging
 import time
 from urllib.request import urlopen
-from tiktokapipy.api import TikTokAPI
+from tiktokapipy.async_api import AsyncTikTokAPI
 from bots.modules.twitter import Twitter
 from bots.modules.translate import Translator
 
@@ -10,21 +10,22 @@ logger = logging.getLogger(__name__)
 
 
 class TranslateTikToksBot(Twitter):
-    def __init__(
+    async def __init__(
         self, src, dst, glossary={}, corrections={}, handles={}, emojis={}, api=None
     ):
-        self.tl = Translator(
-            src=src, dst=dst, glossary=glossary, corrections=corrections
-        )
-        self.last_response_time = None
-        self.emojis = emojis
-        self.handles = handles
-        self.ids = []
-        for handle in self.handles:
-            with TikTokAPI() as tiktok:
-                user = tiktok.user(handle)
-            for video in user.videos:
-                self.ids.append(video.id)
+        async with AsyncTikTokAPI()(emulate_mobile=True, navigation_timeout=60) as tiktok:
+
+            self.tl = Translator(
+                src=src, dst=dst, glossary=glossary, corrections=corrections
+            )
+            self.last_response_time = None
+            self.emojis = emojis
+            self.handles = handles
+            self.ids = []
+            for handle in self.handles:
+                user = await tiktok.user(handle)
+                async for video in user.videos:
+                    self.ids.append(video.id)
         super().__init__(api)
 
     def send_tweet(self, username, text, medias):
@@ -53,13 +54,13 @@ class TranslateTikToksBot(Twitter):
         text = self.tl.translate_text(text)
         self.send_tweet(username, text, [media_id])
 
-    def start(self):
+    async def start(self):
         while True:
             for handle in self.handles:
-                with TikTokAPI() as tiktok:
-                    user = tiktok.user(handle)
-                for video in user.videos:
-                    if video.id not in self.ids:
-                        self.ids.append(video.id)
-                        self.translate_tiktok(user.nickname, video)
+                async with AsyncTikTokAPI()(emulate_mobile=True, navigation_timeout=60) as tiktok:
+                    user = await tiktok.user(handle)
+                    async for video in user.videos:
+                        if video.id not in self.ids:
+                            self.ids.append(video.id)
+                            self.translate_tiktok(user.nickname, video)
             time.sleep(600)
