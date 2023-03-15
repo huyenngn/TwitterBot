@@ -21,7 +21,7 @@ class TranslateTikToksBot(Twitter):
         self.handles = handles
         self.ids = []
         for handle in self.handles:
-            with TikTokAPI() as tiktok:
+            with TikTokAPI(emulate_mobile=True) as tiktok:
                 user = tiktok.user(handle)
             for video in user.videos:
                 self.ids.append(video.id)
@@ -56,7 +56,7 @@ class TranslateTikToksBot(Twitter):
     def start(self):
         while True:
             for handle in self.handles:
-                with TikTokAPI() as tiktok:
+                with TikTokAPI(emulate_mobile=True) as tiktok:
                     user = tiktok.user(handle)
                 for video in user.videos:
                     if video.id not in self.ids:
