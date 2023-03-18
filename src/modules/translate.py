@@ -1,18 +1,13 @@
 from io import BytesIO
-import logging
 import os
-from bots.modules.util import img2byte
 from PIL import Image, ImageDraw, ImageFont
 from google.cloud import vision
 from google.cloud import translate
+from google.api_core.exceptions import AlreadyExists
 import requests
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 google_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 gcloud_id = os.getenv("GCLOUD_ID")
-
 
 class Translator:
     def __init__(self, src, dst, glossary={}, corrections={}):
@@ -31,19 +26,26 @@ class Translator:
         for src, dst in self.glossary.items():
             t = t.replace(src, dst)
 
-        parent = f"projects/{gcloud_id}/locations/global"
+        location = "us-central1"
+
+        glossary = self.google.glossary_path(gcloud_id, location, "glossary")
+
+        glossary_config = translate.TranslateTextGlossaryConfig(glossary=glossary)
+
+        parent = f"projects/{gcloud_id}/locations/{location}"
 
         response = self.google.translate_text(
             request={
                 "parent": parent,
                 "contents": [t],
-                "mime_type": "text/plain",  # mime types: text/plain, text/html
+                "mime_type": "text/plain",
                 "source_language_code": self.src,
                 "target_language_code": self.dst,
+                "glossary_config": glossary_config,
             }
         )
 
-        translation = response.translations[0].translated_text
+        translation = response.glossary_translations[0].translated_text
 
         if translation != t:
             for src, dst in self.corrections.items():
@@ -98,15 +100,59 @@ class Translator:
                     text = "\n".join(temp)
 
                     fontsize = int(pil_image.size[0]/70)
-                    font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
+                    font = ImageFont.truetype("src/modules/NotoSerif-Regular.ttf", fontsize)
                     bbox = draw.multiline_textbbox(poly[0], text, font=font)
                     while abs(bbox[0] - bbox[2]) < poly_width and abs(bbox[1] - bbox[3]) < poly_height:
                         fontsize += 1
-                        font = ImageFont.truetype("bots/modules/NotoSerif-Regular.ttf", fontsize)
+                        font = ImageFont.truetype("src/modules/NotoSerif-Regular.ttf", fontsize)
                         bbox = draw.multiline_textbbox(poly[0], text, font=font)
                     print(fontsize)
                     draw.rectangle(bbox, fill=(255, 255, 255))
                     draw.multiline_text(poly[0], text, (0, 0, 0), font=font)
-        pil_image.show()
+        
+        buff = BytesIO()
+        pil_image.save(buff, format="JPEG")
+        return buff.getvalue()
 
-        return img2byte(pil_image)
+def create_glossary ():
+
+        client = translate.TranslationServiceClient()
+        location = "us-central1"
+
+        # Set glossary resource name
+        name = client.glossary_path(gcloud_id, location, "glossary")
+
+        # Set language codes
+        language_codes_set = translate.Glossary.LanguageCodesSet(
+            language_codes=["th", "en"]
+        )
+
+        gcs_source = translate.GcsSource(input_uri="gs://freenbeckybot/glossary.csv")
+
+        input_config = translate.GlossaryInputConfig(gcs_source=gcs_source)
+
+        # Set glossary resource information
+        glossary = translate.Glossary(
+            name=name, language_codes_set=language_codes_set, input_config=input_config
+        )
+
+        parent = f"projects/{gcloud_id}/locations/{location}"
+
+        # Create glossary resource
+        # Handle exception for case in which a glossary
+        #  with glossary_name already exists
+        try:
+            operation = client.create_glossary(parent=parent, glossary=glossary)
+            operation.result(timeout=90)
+            print("Created glossary.")
+        except AlreadyExists:
+            operation = client.delete_glossary(name=name)
+            result = operation.result(180)
+            print("Deleted: {}".format(result.name))
+            create_glossary()
+
+if __name__ == "__main__":
+    create_glossary()
+    tl = Translator("th", "en")
+    text = "วันนี้สนุกมั้ยค่าาา เล่าให้นุฟังหน่อยย🫶🏻 ขอบคุณที่มาดูนะคะ🫠🥹🧸💖 #AurameXBecky"
+    print(tl.translate_text(text))

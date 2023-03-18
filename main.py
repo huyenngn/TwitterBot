@@ -1,4 +1,19 @@
-from bots.translate_tiktoks import TranslateTikToksBot
+import os
+from src.bot import TranslateTweetsBot
+from src.modules.twitter import Client, StreamClient
+
+bot_settings = {
+    # test users and admins
+    "admins": ["FreenBeckyBot", "joohwangblink"],
+    # twitter users and their respective emoji/alias
+    # this could be accounts your biases regularily interact with
+    # (including your biases)
+    "twitter_handles": {
+        "srchafreen": "\ud83d\udc30",
+        "AngelssBecky": "\ud83e\udda6"
+    },
+}
+
 
 translation_settings = {
     # language settings
@@ -42,28 +57,27 @@ translation_settings = {
     },
 }
 
-bot_settings = {
-    "tiktok_handles": {
-        "srchafreen": "freen",
-        "angelssbecky": "becky",
-    },
-    "emojis": {
-        "freen": "\ud83d\udc30",
-        "becky": "\ud83e\udda6",
-    },
-}
-
+consumer_key = os.getenv("CONSUMER_KEY")
+consumer_secret = os.getenv("CONSUMER_SECRET")
+access_token = os.getenv("ACCESS_TOKEN")
+access_token_secret = os.getenv("ACCESS_TOKEN_SECRET")
+bearer_token = os.getenv("BEARER_TOKEN")
 
 def main():
-    bot = TranslateTikToksBot(
+    api = Client(consumer_key,consumer_secret,access_token, access_token_secret)
+    streamapi = StreamClient(bearer_token)
+    bot = TranslateTweetsBot(
         src=translation_settings["src"],
         dst=translation_settings["dst"],
         glossary=translation_settings["glossary"],
         corrections=translation_settings["corrections"],
-        handles=bot_settings["tiktok_handles"],
-        emojis=bot_settings["emojis"],
+        admins=bot_settings["admins"],
+        handles=bot_settings["twitter_handles"],
+        api=api,
+        streamapi=streamapi
         )
     bot.start()
+
 
 if __name__ == "__main__":
     main()

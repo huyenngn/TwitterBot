@@ -2,7 +2,6 @@ from io import BytesIO
 import os
 from urllib.parse import urlencode
 import requests
-from bots.modules.util import img2byte
 from PIL import Image
 
 keys = ["API_FLASH_KEY", "API_FLASH_KEY2", "API_FLASH_KEY3"]
@@ -25,7 +24,7 @@ class Thai2Eng:
                 wait_until="network_idle",
                 width="750",
                 full_page="true",
-                js="let list = document.querySelectorAll('ul'); if ( list.length == 0 || list[0].children.length == 0){document.querySelector('body').setAttribute('style', 'display: none;')} else {document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelector('footer').setAttribute('hidden', 'true');document.querySelector('form').setAttribute('hidden', 'true');};",
+                js="if ( document.querySelectorAll('ul').length == 0 || document.querySelectorAll('ul')[0].children.length == 0) {document.querySelector('body').setAttribute('style', 'display: none;')} else {document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelector('footer').setAttribute('hidden', 'true');document.querySelector('form').setAttribute('hidden', 'true');};",
                 quality="100",
                 url="https://thai2english.com/?q=" + text,
             )
@@ -47,6 +46,9 @@ class Thai2Eng:
         parts = (4 if height > 3000 else (3 if height > 2500 else (2 if height > 1500 else 1)))
         for i in range(0, parts):
             crop = pil_image.crop((0, i * height / parts, width, (i + 1) * height / parts))
-            pages.append(img2byte(crop))
+
+            buff = BytesIO()
+            crop.save(buff, format="JPEG")
+            pages.append(buff.getvalue())
 
         return pages
