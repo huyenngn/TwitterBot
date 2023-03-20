@@ -1,6 +1,5 @@
 from io import BytesIO
 import logging
-import threading
 import requests
 import time
 from requests_oauthlib import OAuth1Session
@@ -109,9 +108,9 @@ class Client:
 
         payload = {}
         
-        for key, value in params:
+        for key, value in params.items():
             k = key.split(".", 1)
-            if len(k) > 2:
+            if len(k) > 1:
                 if k[0] not in payload.keys():
                     payload[k[0]] = {}
                 payload[k[0]][k[1]] = value
@@ -233,7 +232,8 @@ class Client:
 class StreamClient:
     def __init__(self, bearer_token) -> None:
         self.bearer_token = bearer_token
-        self.last_response_time = None
+        self.filtered_stream = None
+
 
     def bearer_oauth(self, r):
         r.headers["Authorization"] = f"Bearer {self.bearer_token}"
@@ -284,7 +284,7 @@ class StreamClient:
 
         logger.info(f"Set rules. Response code: {response.status_code}")
 
-    def create_stream(self):
+    def filter(self):
         response = requests.get(
             "https://api.twitter.com/2/tweets/search/stream",
             params={
@@ -303,27 +303,11 @@ class StreamClient:
 
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
-        return response
+        self.filtered_stream = response.iter_lines()
+
+        return self.filtered_stream
     
-    def get_stream(self):
-        response = self.create_stream()
-        self.last_response_time = time.time()
-        t_handler = threading.Thread(target=self.sub_routine())
-        t_handler.start()
-        for response_line in response.iter_lines():
-            self.last_response_time = time.time()
-            if response_line:
-                json_response = json.loads(response_line)
-
-                yield json_response
-
-        t_handler.join()
-        logger.info("Disconnected.")
-        yield self.get_stream()
-
-    def sub_routine(self):
-        while True:
-            time.sleep(10)
-            if (time.time() - self.last_response_time) > 30:
-                logger.info("About to disconnect.")
-                return
+    def get_filtered_stream(self):
+        if self.filtered_stream == None:
+            return self.filter()
+        return self.filtered_stream
