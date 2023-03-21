@@ -147,31 +147,31 @@ class TranslateTweetsBot():
             if response_line:
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-            tag = json_response["matching_rules"][0]["tag"]
+                tag = json_response["matching_rules"][0]["tag"]
 
-            if tag == "update":
-                text, username, tweet_id, parent_id, image_urls, tweet_type, reply_settings = self.get_data(json_response)
-                self.api.like(tweet_id)
-                self.api.retweet(tweet_id)
-                if tweet_type != "retweeted":
-                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
+                if tag == "update":
+                    text, username, tweet_id, parent_id, image_urls, tweet_type, reply_settings = self.get_data(json_response)
+                    self.api.like(tweet_id)
                     self.api.retweet(tweet_id)
-                    self.explanation_tweet(text, tweet_id)
-                if parent_id:
+                    if tweet_type != "retweeted":
+                        tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
+                        self.api.retweet(tweet_id)
+                        self.explanation_tweet(text, tweet_id)
+                    if parent_id:
+                        parent = self.api.get_tweet(parent_id)
+                        text, parentname, _, _, image_urls, _, _ = self.get_data(parent)
+                        if parentname not in self.biases:
+                            tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, reference=(tweet_type, username))
+                            if tweet_type == "retweeted":
+                                self.api.retweet(tweet_id)
+                                self.explanation_tweet(text, tweet_id)
+
+                elif tag == "mention":
+                    _, _, tweet_id, parent_id, _, _, reply_settings = self.get_data(json_response)
                     parent = self.api.get_tweet(parent_id)
-                    text, parentname, _, _, image_urls, _, _ = self.get_data(parent)
-                    if parentname not in self.biases:
-                        tweet_id = self.translation_tweet(text, parentname, tweet_id, image_urls, reference=(tweet_type, username))
-                        if tweet_type == "retweeted":
-                            self.api.retweet(tweet_id)
-                            self.explanation_tweet(text, tweet_id)
+                    logger.info(json.dumps(parent, indent=4, sort_keys=True))
 
-            elif tag == "mention":
-                _, _, tweet_id, parent_id, _, _, reply_settings = self.get_data(json_response)
-                parent = self.api.get_tweet(parent_id)
-                logger.info(json.dumps(parent, indent=4, sort_keys=True))
+                    text, username, _, _, image_urls, _, _ = self.get_data(parent)
 
-                text, username, _, _, image_urls, _, _ = self.get_data(parent)
-
-                tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
-                self.explanation_tweet(text, tweet_id)
+                    tweet_id = self.translation_tweet(text, username, tweet_id, image_urls, reply_settings=reply_settings)
+                    self.explanation_tweet(text, tweet_id)
