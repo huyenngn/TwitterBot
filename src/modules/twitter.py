@@ -311,12 +311,13 @@ class StreamClient:
         if self.filtered_stream == None:
             self.filter()
         for response_line in self.filtered_stream:
-            json_response = json.loads(response_line)
-            logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-            if len(json_response["errors"]) > 0:
-                self.filtered_stream = None
-                return self.filter_stream()
-            self.responses.put(json_response)
+            if response_line:
+                json_response = json.loads(response_line)
+                logger.info(json.dumps(json_response, indent=4, sort_keys=True))
+                if len(json_response["errors"]) > 0:
+                    self.filtered_stream = None
+                    return self.filter_stream()
+                self.responses.put(json_response)
 
     def get_filtered_stream(self):
         while True:
