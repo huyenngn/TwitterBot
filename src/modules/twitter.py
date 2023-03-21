@@ -306,6 +306,7 @@ class StreamClient:
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
         self.filtered_stream = response.iter_lines()
+        return self.filtered_stream
     
     def filter_stream(self):
         if self.filtered_stream == None:
@@ -320,5 +321,6 @@ class StreamClient:
                 self.responses.put(json_response)
 
     def get_filtered_stream(self):
-        return self.responses.get()
+        while True:
+            yield self.responses.get()
 
