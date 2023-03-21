@@ -314,7 +314,7 @@ class StreamClient:
             if response_line:
                 json_response = json.loads(response_line)
                 logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-                if len(json_response["errors"]) > 0:
+                if ("errors" in json_response) and (len(json_response["errors"]) > 0):
                     self.filtered_stream = None
                     return self.filter_stream()
                 self.responses.put(json_response)
