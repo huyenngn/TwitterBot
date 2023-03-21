@@ -143,7 +143,10 @@ class TranslateTweetsBot():
         return new_tweet["data"]["id"]
 
     def start(self):
-        for json_response in self.streamapi.filter():
+        for response_line in self.streamapi.filter():
+            if response_line:
+                json_response = json.loads(response_line)
+                logger.info(json.dumps(json_response, indent=4, sort_keys=True))
             tag = json_response["matching_rules"][0]["tag"]
 
             if tag == "update":
