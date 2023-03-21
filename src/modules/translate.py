@@ -89,8 +89,7 @@ class Translator:
                     p = text.split()
                     number_of_lines = int(1 + (len(p)/10)*(poly_height/poly_width))
                     line_size = min(10, int(len(p)/number_of_lines))
-                    # print("w: ", poly_width, "h: ", poly_height, "l: ", len(p), "n: ", number_of_lines, "s: ", line_size)
-                    # print(p)
+
                     temp = []
                     for i in range(0, number_of_lines):
                         start = i * line_size
@@ -119,10 +118,8 @@ def create_glossary ():
         client = translate.TranslationServiceClient()
         location = "us-central1"
 
-        # Set glossary resource name
         name = client.glossary_path(gcloud_id, location, "glossary")
 
-        # Set language codes
         language_codes_set = translate.Glossary.LanguageCodesSet(
             language_codes=["th", "en"]
         )
@@ -131,16 +128,12 @@ def create_glossary ():
 
         input_config = translate.GlossaryInputConfig(gcs_source=gcs_source)
 
-        # Set glossary resource information
         glossary = translate.Glossary(
             name=name, language_codes_set=language_codes_set, input_config=input_config
         )
 
         parent = f"projects/{gcloud_id}/locations/{location}"
 
-        # Create glossary resource
-        # Handle exception for case in which a glossary
-        #  with glossary_name already exists
         try:
             operation = client.create_glossary(parent=parent, glossary=glossary)
             operation.result(timeout=90)

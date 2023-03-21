@@ -21,29 +21,18 @@ translation_settings = {
     "dst": "en",
     # replacements applied before translating
     "glossary": {
-        # "ง้อ": "reconcile",
-        # "งอน": "sulk",
-        "มุมุ": "mumu",
         "มามี้": "Mami",
-        "ยัก": "รัก",  # yak
         "ปีโย๊": "Piyo",
         "ฟรีนกี้": "Freenky",
         "พี่ฟรีน": "P'Freen",
         "ฟรีน": "Freen",
         "คุณสาม": "คุณแซม",  # Khun Sam
-        "นุคน": "หนู",  # Nu -> Sandra
-        "นุ": "หนู",
-        "หนู": "แซนดร้า",
         "น้องพุง": "Nong Belly",
         "น้อง": "Nong",
-        "พี่": "Phi",
         "คุณ": "Khun",
-        # "อะ": "",  # a
     },
     # replacements applied after translating
     "corrections": {
-        "Sandra": "Nu",
-        "sandra": "Nu",
         "Beck ": "Bec ",
         "I am": "",
         "I'm ": "",
