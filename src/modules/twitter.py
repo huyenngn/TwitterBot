@@ -1,5 +1,6 @@
 from io import BytesIO
 import logging
+import queue
 import requests
 import time
 from requests_oauthlib import OAuth1Session
@@ -233,6 +234,7 @@ class StreamClient:
     def __init__(self, bearer_token) -> None:
         self.bearer_token = bearer_token
         self.filtered_stream = None
+        self.responses = queue.Queue()
 
 
     def bearer_oauth(self, r):
@@ -304,10 +306,19 @@ class StreamClient:
         logger.info(f"Filtered stream. Response code: {response.status_code}")
 
         self.filtered_stream = response.iter_lines()
-
-        return self.filtered_stream
     
-    def get_filtered_stream(self):
+    def filter_stream(self):
         if self.filtered_stream == None:
-            return self.filter()
-        return self.filtered_stream
+            self.filter()
+        for response_line in self.filtered_stream:
+            json_response = json.loads(response_line)
+            logger.info(json.dumps(json_response, indent=4, sort_keys=True))
+            if len(json_response["errors"]) > 0:
+                self.filtered_stream = None
+                return self.filter_stream()
+            self.responses.put(json_response)
+
+    def get_filtered_stream(self):
+        while True:
+            yield self.responses.get()
+
