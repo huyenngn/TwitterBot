@@ -320,6 +320,5 @@ class StreamClient:
                 self.responses.put(json_response)
 
     def get_filtered_stream(self):
-        while True:
-            yield self.responses.get()
+        return self.responses.get()
 
