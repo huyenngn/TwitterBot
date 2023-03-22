@@ -1,6 +1,7 @@
 from io import BytesIO
 import logging
 import queue
+import threading
 import requests
 import time
 from requests_oauthlib import OAuth1Session
@@ -232,9 +233,9 @@ class Client:
 
 class StreamClient:
     def __init__(self, bearer_token) -> None:
+        self.errors = ErrorHandler()
         self.bearer_token = bearer_token
-        self.filtered_stream = None
-        self.responses = queue.Queue()
+        self.filtered_stream = queue.Queue()
 
 
     def bearer_oauth(self, r):
@@ -248,7 +249,7 @@ class StreamClient:
             "https://api.twitter.com/2/tweets/search/stream/rules", auth=self.bearer_oauth
         )
         if response.status_code != 200:
-            self.error_handler(response, self.wait_time)
+            self.errors.error_handler(response, self.wait_time)
             return self.get_rules()
 
         logger.info(f"Got rules. Response code: {response.status_code}")
@@ -267,7 +268,7 @@ class StreamClient:
             json=payload,
         )
         if response.status_code != 200:
-            self.error_handler(response)
+            self.errors.error_handler(response)
             return self.delete_all_rules()
 
         logger.info(f"Deleted rules. Response code: {response.status_code}")
@@ -281,46 +282,45 @@ class StreamClient:
         )
 
         if response.status_code != 201:
-            self.error_handler(response)
+            self.errors.error_handler(response)
             return self.set_rules()
 
         logger.info(f"Set rules. Response code: {response.status_code}")
 
     def filter(self):
-        response = requests.get(
-            "https://api.twitter.com/2/tweets/search/stream",
-            params={
-                "expansions": "author_id,attachments.media_keys,entities.mentions.username",
-                "tweet.fields": "referenced_tweets,entities,reply_settings",
-                "media.fields": "url,type",
-                "user.fields": "username",
-            },
-            auth=self.bearer_oauth,
-            stream=True,
-        )
-
-        if response.status_code != 200:
-            self.error_handler(response)
-            return self.get_stream()
-
-        logger.info(f"Filtered stream. Response code: {response.status_code}")
-
-        self.filtered_stream = response.iter_lines()
-        return self.filtered_stream
-    
-    def filter_stream(self):
-        if self.filtered_stream == None:
-            self.filter()
-        for response_line in self.filtered_stream:
-            if response_line:
-                json_response = json.loads(response_line)
-                logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-                if ("errors" in json_response) and (len(json_response["errors"]) > 0):
-                    self.filtered_stream = None
-                    return self.filter_stream()
-                self.responses.put(json_response)
-
-    def get_filtered_stream(self):
         while True:
-            yield self.responses.get()
+            try:
+                response = requests.get(
+                    "https://api.twitter.com/2/tweets/search/stream",
+                    params={
+                        "expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                        "tweet.fields": "referenced_tweets,entities,reply_settings",
+                        "media.fields": "url,type",
+                        "user.fields": "username",
+                    },
+                    auth=self.bearer_oauth,
+                    stream=True,
+                )
+
+                if response.status_code != 200:
+                    self.errors.error_handler(response)
+                    return self.filter()
+
+                logger.info(f"Filtered stream. Response code: {response.status_code}")
+            
+                for response_line in response.iter_lines():
+                    if response_line:
+                        json_response = json.loads(response_line)
+                        logger.info(json.dumps(json_response, indent=4, sort_keys=True))
+                        if "errors" in json_response:
+                            break
+                        self.filtered_stream.put_nowait(json_response)
+            except Exception as e:
+                logger.info(f"Reconnecting. Error: {e}")
+
+    def get_filter(self):
+        t_stream = threading.Thread(target=self.filter)
+        t_stream.start()
+        while True:
+            yield self.filtered_stream.get()
 

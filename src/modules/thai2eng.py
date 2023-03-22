@@ -24,7 +24,7 @@ class Thai2Eng:
                 wait_until="network_idle",
                 width="750",
                 full_page="true",
-                js="if ( document.querySelectorAll('ul').length == 0 || document.querySelectorAll('ul')[0].children.length == 0) {document.querySelector('body').setAttribute('style', 'display: none;')} else {document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelector('footer').setAttribute('hidden', 'true');document.querySelector('form').setAttribute('hidden', 'true');};",
+                js="if ( document.querySelectorAll('ul').length == 0 || document.querySelector('ul').children.length == 0 || document.querySelectorAll('h4').length > 0) {document.querySelector('body').setAttribute('style', 'display: none;')} else {document.getElementsByClassName('container')[0].setAttribute('style', 'display: none;');document.querySelector('footer').setAttribute('hidden', 'true');document.querySelector('form').setAttribute('hidden', 'true');};",
                 quality="100",
                 url="https://thai2english.com/?q=" + text,
             )
