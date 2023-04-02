@@ -42,7 +42,7 @@ translation_settings = {
         "boyfriend": "girlfriend",
         " him ": " her ",
         " him.": " her.",
-        "his ": "her ",
+        " his ": " her ",
     },
 }
 
