@@ -289,34 +289,32 @@ class StreamClient:
 
     def filter(self):
         while True:
-            try:
-                response = requests.get(
-                    "https://api.twitter.com/2/tweets/search/stream",
-                    params={
-                        "expansions": "author_id,attachments.media_keys,entities.mentions.username",
-                        "tweet.fields": "referenced_tweets,entities,reply_settings",
-                        "media.fields": "url,type",
-                        "user.fields": "username",
-                    },
-                    auth=self.bearer_oauth,
-                    stream=True,
-                )
+            response = requests.get(
+                "https://api.twitter.com/2/tweets/search/stream",
+                params={
+                    "expansions": "author_id,attachments.media_keys,entities.mentions.username",
+                    "tweet.fields": "referenced_tweets,entities,reply_settings",
+                    "media.fields": "url,type",
+                    "user.fields": "username",
+                },
+                auth=self.bearer_oauth,
+                stream=True,
+            )
 
-                if response.status_code != 200:
-                    self.errors.error_handler(response)
-                    return self.filter()
+            if response.status_code != 200:
+                self.errors.error_handler(response)
+                continue
 
-                logger.info(f"Filtered stream. Response code: {response.status_code}")
-            
-                for response_line in response.iter_lines():
-                    if response_line:
-                        json_response = json.loads(response_line)
-                        logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-                        if "errors" in json_response:
-                            break
-                        self.filtered_stream.put_nowait(json_response)
-            except Exception as e:
-                logger.info(f"Reconnecting. Error: {e}")
+            logger.info(f"Filtered stream. Response code: {response.status_code}")
+        
+            for response_line in response.iter_lines():
+                if response_line:
+                    json_response = json.loads(response_line)
+                    logger.info(json.dumps(json_response, indent=4, sort_keys=True))
+                    if "errors" in json_response:
+                        break
+                    self.filtered_stream.put_nowait(json_response)
+
 
     def get_filter(self):
         t_stream = threading.Thread(target=self.filter)

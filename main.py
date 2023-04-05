@@ -34,8 +34,8 @@ translation_settings = {
     # replacements applied after translating
     "corrections": {
         "Beck ": "Bec ",
-        "I am": "",
-        "I'm ": "",
+        "I am": "is",
+        "I'm ": "is",
         "I ": "",
         " me ": " me/you ",
         " me.": " me/you.",
