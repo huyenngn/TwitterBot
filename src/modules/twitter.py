@@ -236,7 +236,7 @@ class StreamClient:
         self.errors = ErrorHandler()
         self.bearer_token = bearer_token
         self.filtered_stream = queue.Queue()
-
+        self.connected = queue.Queue()
 
     def bearer_oauth(self, r):
         r.headers["Authorization"] = f"Bearer {self.bearer_token}"
@@ -288,7 +288,6 @@ class StreamClient:
         logger.info(f"Set rules. Response code: {response.status_code}")
 
     def filter(self):
-        while True:
             response = requests.get(
                 "https://api.twitter.com/2/tweets/search/stream",
                 params={
@@ -303,7 +302,7 @@ class StreamClient:
 
             if response.status_code != 200:
                 self.errors.error_handler(response)
-                continue
+                return self.filter()
 
             logger.info(f"Filtered stream. Response code: {response.status_code}")
         
@@ -312,13 +311,17 @@ class StreamClient:
                     json_response = json.loads(response_line)
                     logger.info(json.dumps(json_response, indent=4, sort_keys=True))
                     if "errors" in json_response:
+                        self.connected.put_nowait(False)
                         break
+                    self.connected.put_nowait(True)
                     self.filtered_stream.put_nowait(json_response)
 
 
     def get_filter(self):
-        t_stream = threading.Thread(target=self.filter)
-        t_stream.start()
         while True:
-            yield self.filtered_stream.get()
+            t_stream = threading.Thread(target=self.filter)
+            t_stream.start()
+            while self.connected.get():
+                yield self.filtered_stream.get()
+            t_stream.join()
 
