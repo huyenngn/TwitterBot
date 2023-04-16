@@ -318,7 +318,6 @@ class StreamClient:
 
 
     def get_filter(self):
-        while True:
             t_stream = threading.Thread(target=self.filter)
             t_stream.start()
             while self.connected.get():
