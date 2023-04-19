@@ -235,8 +235,6 @@ class StreamClient:
     def __init__(self, bearer_token) -> None:
         self.errors = ErrorHandler()
         self.bearer_token = bearer_token
-        self.filtered_stream = queue.Queue()
-        self.connected = queue.Queue()
 
     def bearer_oauth(self, r):
         r.headers["Authorization"] = f"Bearer {self.bearer_token}"
@@ -306,21 +304,4 @@ class StreamClient:
 
             logger.info(f"Filtered stream. Response code: {response.status_code}")
         
-            for response_line in response.iter_lines():
-                if response_line:
-                    json_response = json.loads(response_line)
-                    logger.info(json.dumps(json_response, indent=4, sort_keys=True))
-                    if "errors" in json_response:
-                        self.connected.put_nowait(False)
-                        break
-                    self.connected.put_nowait(True)
-                    self.filtered_stream.put_nowait(json_response)
-
-
-    def get_filter(self):
-            t_stream = threading.Thread(target=self.filter)
-            t_stream.start()
-            while self.connected.get():
-                yield self.filtered_stream.get()
-            t_stream.join()
-
+            return response
