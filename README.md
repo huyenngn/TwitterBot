@@ -1,6 +1,8 @@
 # Translation Twitter Bot
 A bot that translates tweets.
 
+############ DEPRECATED WITH NEW TWITTER API ############
+
 ## Usage
 ```bash
 sudo docker build . -t main
